@@ -1,0 +1,18 @@
+# Environnements locaux et variables secrettes
+.env
+.env.*
+!.env.example
+
+# Environnement Python (Backend)
+backend/venv/
+backend/__pycache__/
+*.pyc
+.pytest_cache/
+
+# Fichiers de configuration / clés GCP
+app/credentials/
+
+# L'ignorance du frontend est gérée en théorie par frontend/.gitignore
+# Mais par sécurité pour le monorepo, on ajoute :
+frontend/node_modules/
+frontend/.next/
