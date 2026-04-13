@@ -2,11 +2,14 @@ import vertexai
 from vertexai.preview import reasoning_engines
 import json
 import uuid
+import os
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.path.dirname(__file__), "credentials", "letudiant-data-prod-ori-key.json")
 
 PROJECT_ID = "letudiant-data-prod"
 reasoning_engine_id = "7428309353347678208"
 
-print("Initialisation de l'Agent Albert...")
+print("Initialisation de l'Agent ORI...")
 vertexai.init(project=PROJECT_ID, location="europe-west1")
 reasoning_engine = reasoning_engines.ReasoningEngine(reasoning_engine_id)
 
@@ -28,9 +31,7 @@ while True:
         
         text_response = str(response)
         
-        # Le Text generé contient parfois des séparateurs unitaires (\x1f) avec des métadonnées
         parts = text_response.split('\x1f')
-        # S'il ne trouve pas \x1f, on tente le caractère littéral ␟
         if len(parts) == 1:
             parts = text_response.split('␟')
 
@@ -38,12 +39,12 @@ while True:
             message = parts[1]
             try:
                 tokens_info = json.loads(parts[2])
-                print(f"\nAlbert: {message}")
+                print(f"\nORI: {message}")
                 print(f"\n[🔑 Info Tokens | Input: {tokens_info.get('input_tokens_count', 0)} | Output: {tokens_info.get('output_tokens_count', 0)}]")
             except Exception:
-                print(f"\nAlbert: {message}")
+                print(f"\nORI: {message}")
         else:
-            print(f"\nAlbert: {text_response}")
+            print(f"\nORI: {text_response}")
 
     except KeyboardInterrupt:
         print("\nArrêt forcé.")

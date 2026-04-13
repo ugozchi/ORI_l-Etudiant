@@ -64,7 +64,7 @@ response = reasoning_engine.query(
 ## 3. Plan d'exécution — Ordre des sprints
 
 ### SPRINT 0 — Setup (1h)
-1. Faire tourner le sample : `docker build . -t albert && docker run albert`
+1. Faire tourner le sample : `docker build . -t ori && docker run ori`
 2. Créer le repo GitHub monorepo : `/frontend` + `/backend`
 3. Setup FastAPI boilerplate avec endpoint `/health`
 4. Setup Next.js avec Tailwind + shadcn/ui
@@ -296,7 +296,7 @@ CONTEXTE TECHNIQUE :
   vertexai.init(project="letudiant-data-prod", location="europe-west1")
   engine = reasoning_engines.ReasoningEngine("7428309353347678208")
   response = engine.query(config={"thread_id": "1"}, message="Bonjour")
-- Auth via service account JSON dans /credentials/letudiant-data-prod-albert.json
+- Auth via service account JSON dans /credentials/letudiant-data-prod-ori.json
 - Variable d'env : GOOGLE_APPLICATION_CREDENTIALS pointe vers ce fichier
 
 CE QUE JE VEUX :
@@ -503,7 +503,7 @@ POLISH :
 
 ```env
 # Backend (.env)
-GOOGLE_APPLICATION_CREDENTIALS=./credentials/letudiant-data-prod-albert.json
+GOOGLE_APPLICATION_CREDENTIALS=./credentials/letudiant-data-prod-ori.json
 GCP_PROJECT_ID=letudiant-data-prod
 ORI_ENGINE_ID=7428309353347678208
 VERTEX_LOCATION=europe-west1
