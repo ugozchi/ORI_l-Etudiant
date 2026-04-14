@@ -1,7 +1,8 @@
-# Environnements locaux et variables secrettes
+#Environnements locaux et variables secrettes
 .env
 .env.*
 !.env.example
+.DS_Store
 
 # Environnement Python (Backend)
 backend/venv/
