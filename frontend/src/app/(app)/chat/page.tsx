@@ -58,7 +58,7 @@ export default function ChatPage() {
       }
 
       // Appel de l'API Vertex via le backend FastAPI
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
