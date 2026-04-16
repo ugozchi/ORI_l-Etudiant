@@ -16,9 +16,12 @@ class OriClient:
 
     def _init_vertex(self):
         """Initialise la connexion à Vertex AI au démarrage"""
-        # On s'assure que credential_path pointe vers la racine du repo si non défini autrement
+        # On s'assure que credential_path pointe vers la racine du repo peu importe le CWD
         if "GOOGLE_APPLICATION_CREDENTIALS" not in os.environ:
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./credentials/letudiant-data-prod-ori-key.json"
+            from pathlib import Path
+            root_dir = Path(__file__).resolve().parent.parent.parent
+            cred_path = root_dir / "credentials" / "letudiant-data-prod-ori-key.json"
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(cred_path)
             
         print("Initialisation de l'Agent ORI (Mode API)...")
         vertexai.init(

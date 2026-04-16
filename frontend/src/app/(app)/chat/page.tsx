@@ -15,13 +15,7 @@ type Message = {
 };
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      content: 'Bonjour ! Je suis ORI, ton conseiller d\'orientation propulsé par l\'IA. Comment puis-je t\'aider aujourd\'hui ?'
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -36,6 +30,42 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, loading]);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.warn('Erreur lors de la récupération des messages:', error);
+      }
+
+      if (data && data.length > 0) {
+        // Formater les historiques Supabase
+        const history = data.map((msg) => ({
+          id: msg.id,
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content
+        }));
+        setMessages(history);
+      } else {
+        // Message d'accueil par défaut si aucun message dans la BDD
+        setMessages([{
+          id: 'welcome',
+          role: 'assistant',
+          content: 'Bonjour ! Je suis ORI, ton conseiller d\'orientation propulsé par l\'IA. Comment puis-je t\'aider aujourd\'hui ?'
+        }]);
+      }
+    };
+
+    fetchMessages();
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +87,13 @@ export default function ChatPage() {
         throw new Error('Non authentifié');
       }
 
+      // 1. Sauvegarde silencieuse de la question utilisateur
+      supabase.from('messages').insert([
+        { user_id: user.id, role: 'user', content: userMsg }
+      ]).then(({ error }) => {
+        if (error) console.warn("Erreur sauvegarde user:", error);
+      });
+
       // Appel de l'API Vertex via le backend FastAPI
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/`, {
         method: 'POST',
@@ -71,11 +108,20 @@ export default function ChatPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de la communication avec l\'API ORI');
+        const errorText = await response.text();
+        console.error("Détail de l'erreur Backend 500 :", errorText);
+        throw new Error('Erreur API ORI: ' + errorText);
       }
 
       const data = await response.json();
       
+      // 2. Sauvegarde silencieuse de la réponse de l'assistant
+      supabase.from('messages').insert([
+        { user_id: user.id, role: 'assistant', content: data.response }
+      ]).then(({ error }) => {
+        if (error) console.warn("Erreur sauvegarde assistant:", error);
+      });
+
       setMessages((prev: Message[]) => [
         ...prev,
         { id: Date.now().toString(), role: 'assistant', content: data.response }
@@ -93,8 +139,8 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-full bg-[#0A0A0A] relative">
-      <ScrollArea className="flex-1 p-4 md:p-8" ref={scrollRef}>
-        <div className="max-w-3xl mx-auto space-y-6 pb-24">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8" ref={scrollRef}>
+        <div className="max-w-3xl mx-auto space-y-6 pb-36">
           {messages.map((msg: Message) => (
             <div
               key={msg.id}
@@ -135,9 +181,9 @@ export default function ChatPage() {
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A] to-transparent pt-6 pb-6 px-4 md:px-8">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A] to-[#0A0A0A] pt-4 pb-6 px-4 md:px-8">
         <div className="max-w-3xl mx-auto">
           <form 
             onSubmit={handleSubmit}
