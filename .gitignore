@@ -11,7 +11,7 @@ backend/__pycache__/
 .pytest_cache/
 
 # Fichiers de configuration / clés GCP
-app/credentials/
+credentials/letudiant-data-prod-ori-key.json
 
 # L'ignorance du frontend est gérée en théorie par frontend/.gitignore
 # Mais par sécurité pour le monorepo, on ajoute :
