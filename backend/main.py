@@ -2,8 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
 
-from routers import auth, chat
-
+from routers import auth, chat, fairs
 app = FastAPI(
     title="ORI API - Hackathon L'Étudiant",
     description="Backend Multiplateforme avec ORI (Vertex AI) et Supabase Auth",
@@ -30,6 +29,7 @@ app.add_middleware(
 # Inclusion des routeurs
 app.include_router(auth.router, prefix=f"{settings.api_v1_str}/auth", tags=["Auth"])
 app.include_router(chat.router, prefix=f"{settings.api_v1_str}/chat", tags=["Chat"])
+app.include_router(fairs.router, prefix=f"{settings.api_v1_str}/fairs", tags=["Fairs"])
 
 @app.get("/health", tags=["System"])
 def health_check():
