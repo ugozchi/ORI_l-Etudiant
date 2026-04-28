@@ -128,3 +128,9 @@
     @apply font-sans;
   }
 }
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

@@ -153,36 +153,55 @@ export default function DocsPage() {
       </div>
 
       {/* Right Panel: Editor / Output */}
-      <div className="flex-1 bg-slate-100 relative flex flex-col overflow-hidden">
-        {result ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col p-6 lg:p-12">
-            <div className="flex items-center justify-between mb-6">
-              <div className="text-slate-500 text-sm font-medium">Document généré ({result.length} caractères)</div>
-              <div className="flex gap-3">
-                <Button variant="outline" size="sm" onClick={copyToClipboard} className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm rounded-lg font-medium">
-                  <Copy className="w-4 h-4 mr-2 text-slate-500" /> Copier
-                </Button>
-                <Button size="sm" className="bg-slate-900 text-white hover:bg-slate-800 shadow-sm rounded-lg font-medium">
-                  <Download className="w-4 h-4 mr-2" /> Sauvegarder
-                </Button>
+      <div className="flex-1 bg-[#E2E8F0] relative flex flex-col overflow-hidden items-center justify-center p-8">
+        {/* Background "Desk" Texture */}
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 pointer-events-none" />
+
+        <div className="w-full max-w-4xl h-full relative z-10 flex flex-col">
+          {result ? (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              className="flex-1 flex flex-col"
+            >
+              <div className="flex items-center justify-between mb-4 bg-white/50 backdrop-blur-md p-4 rounded-2xl border border-white shadow-sm">
+                <div className="text-slate-600 font-semibold flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-orange-500" /> Document prêt
+                  <span className="text-xs font-normal text-slate-400 bg-white px-2 py-0.5 rounded-full">{result.length} caractères</span>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="outline" size="sm" onClick={copyToClipboard} className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm rounded-xl font-bold">
+                    <Copy className="w-4 h-4 mr-2 text-slate-400" /> Copier
+                  </Button>
+                  <Button size="sm" className="bg-slate-900 text-white hover:bg-slate-800 shadow-md rounded-xl font-bold">
+                    <Download className="w-4 h-4 mr-2" /> Télécharger
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex-1 bg-white rounded-md shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] overflow-y-auto p-12 md:p-20 font-serif text-slate-800 leading-relaxed relative ring-1 ring-slate-900/5 max-w-[210mm] mx-auto w-full aspect-[1/1.414]">
+                {/* Paper texture overlay */}
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/clean-textile.png')] opacity-10 pointer-events-none" />
+                <div className="relative z-10 whitespace-pre-wrap text-[15px]">{result}</div>
+              </div>
+            </motion.div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="bg-white/50 backdrop-blur-sm rounded-md shadow-2xl overflow-y-auto p-12 font-serif text-slate-400 leading-relaxed relative ring-1 ring-white max-w-[210mm] mx-auto w-full aspect-[1/1.414] flex flex-col items-center justify-center text-center">
+                <div className="absolute inset-0 bg-white/60 pointer-events-none" />
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="w-20 h-20 mb-6 rounded-full bg-white shadow-md flex items-center justify-center">
+                    <FileText className="w-8 h-8 text-slate-300" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-800 mb-3 font-sans">Feuille Blanche</h2>
+                  <p className="text-slate-500 max-w-sm leading-relaxed font-sans font-medium">
+                    Sélectionne tes paramètres à gauche et laisse l'IA de l'Étudiant rédiger ton document.
+                  </p>
+                </div>
               </div>
             </div>
-            
-            <div className="flex-1 bg-white border border-slate-200 rounded-2xl p-8 shadow-sm overflow-y-auto font-serif text-slate-800 leading-relaxed max-w-4xl mx-auto w-full">
-              <div className="whitespace-pre-wrap">{result}</div>
-            </div>
-          </motion.div>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-            <div className="w-24 h-24 mb-6 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-              <FileText className="w-10 h-10 text-slate-400" />
-            </div>
-            <h2 className="text-xl font-bold text-slate-900 mb-3">Feuille Blanche</h2>
-            <p className="text-slate-500 max-w-md leading-relaxed">
-              Remplis les paramètres sur la gauche et laisse l'IA de l'Étudiant rédiger une première version de ton document.
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
     </div>

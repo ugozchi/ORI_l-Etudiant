@@ -274,73 +274,76 @@ export default function ChatPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-16 md:pt-8" ref={scrollRef}>
-          <div className="max-w-3xl mx-auto space-y-6 pb-36">
+          <div className="max-w-3xl mx-auto space-y-8 pb-36">
             {currentMessages.map((msg: Message) => (
               <div
                 key={msg.id}
                 className={cn(
-                  "flex gap-4",
+                  "flex gap-4 group",
                   msg.role === 'user' ? "flex-row-reverse" : "flex-row"
                 )}
               >
                 <div className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm",
+                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-md",
                   msg.role === 'user' 
-                    ? "bg-orange-500 ml-4" 
-                    : "bg-slate-900 mr-4"
+                    ? "bg-gradient-to-br from-orange-400 to-orange-600 ml-2" 
+                    : "bg-slate-900 mr-2"
                 )}>
-                  {msg.role === 'user' ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
+                  {msg.role === 'user' ? <User className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-white" />}
                 </div>
                 
                 <div className={cn(
-                  "py-3 px-4 rounded-2xl max-w-[80%] shadow-sm",
+                  "py-3.5 px-5 rounded-3xl max-w-[80%] shadow-sm relative group-hover:shadow-md transition-shadow",
                   msg.role === 'user' 
                     ? "bg-orange-500 text-white rounded-tr-sm" 
-                    : "bg-white border border-slate-200 text-slate-800 rounded-tl-sm"
+                    : "bg-white border border-slate-100 text-slate-800 rounded-tl-sm"
                 )}>
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</p>
+                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{msg.content}</p>
                 </div>
               </div>
             ))}
             
             {loading && (
               <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-slate-900 mr-4 flex items-center justify-center shrink-0 shadow-sm">
-                  <Bot className="w-4 h-4 text-white" />
+                <div className="w-10 h-10 rounded-full bg-slate-900 mr-2 flex items-center justify-center shrink-0 shadow-md">
+                  <Bot className="w-5 h-5 text-white" />
                 </div>
-                <div className="py-3 px-4 rounded-2xl max-w-[80%] bg-white border border-slate-200 rounded-tl-sm flex items-center gap-2 shadow-sm">
-                  <Loader2 className="w-4 h-4 text-orange-500 animate-spin" />
-                  <span className="text-sm text-slate-500">ORI réfléchit...</span>
+                <div className="py-3 px-5 rounded-3xl max-w-[80%] bg-white border border-slate-100 rounded-tl-sm flex items-center gap-3 shadow-sm">
+                  <div className="flex space-x-1.5">
+                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent pt-12 pb-6 px-4 md:px-8 pointer-events-none">
+        <div className="absolute bottom-0 left-0 right-0 pt-20 pb-8 px-4 md:px-8 pointer-events-none bg-gradient-to-t from-slate-50 via-slate-50/90 to-transparent">
           <div className="max-w-3xl mx-auto pointer-events-auto">
             <form 
               onSubmit={handleSubmit}
-              className="relative flex items-center bg-white border border-slate-200 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-orange-500 shadow-md transition-all"
+              className="relative flex items-center bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-full overflow-hidden focus-within:ring-4 focus-within:ring-orange-500/20 focus-within:border-orange-500 shadow-lg transition-all"
             >
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Posez-moi une question sur votre orientation..."
-                className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-slate-900 placeholder:text-slate-400 py-6 pl-4 pr-16 h-14"
+                className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-slate-900 placeholder:text-slate-400 py-6 pl-6 pr-16 h-16 text-[15px] font-medium"
                 disabled={loading}
               />
               <Button 
                 type="submit" 
                 size="icon"
                 disabled={!input.trim() || loading}
-                className="absolute right-2 h-10 w-10 bg-orange-500 hover:bg-orange-600 rounded-xl disabled:opacity-50 transition-colors shadow-sm"
+                className="absolute right-2 h-12 w-12 bg-orange-500 hover:bg-orange-600 rounded-full disabled:opacity-50 transition-colors shadow-md flex items-center justify-center"
               >
-                <Send className="h-4 w-4 text-white" />
+                <Send className="h-5 w-5 text-white" />
               </Button>
             </form>
-            <div className="text-center mt-3">
-              <span className="text-xs text-slate-500">ORI peut se tromper. Vérifiez les informations importantes.</span>
+            <div className="text-center mt-4">
+              <span className="text-xs font-medium text-slate-400">ORI peut se tromper. Vérifiez les informations importantes.</span>
             </div>
           </div>
         </div>
