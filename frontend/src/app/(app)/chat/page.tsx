@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { createClient } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
-import { v4 as uuidv4 } from 'uuid';
 
 type Message = {
   id: string;
@@ -197,7 +196,7 @@ export default function ChatPage() {
       });
 
       setAllMessages(prev => [...prev, assistantMsg]);
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       setAllMessages(prev => [
         ...prev,
