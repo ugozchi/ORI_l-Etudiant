@@ -47,7 +47,7 @@ export default function ProfilePage() {
             setLevel(p.level);
             setInterests(p.interests || []);
             setStrengthsStr((p.strengths || []).join(', '));
-            setStep(4); // Si profil existe, on montre le résumé
+            setStep(4);
           }
         }
       } catch (err) {
@@ -85,7 +85,7 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      setStep(4); // Show success summary
+      setStep(4);
     } catch (err) {
       console.error(err);
     } finally {
@@ -94,21 +94,21 @@ export default function ProfilePage() {
   };
 
   if (loading) return (
-    <div className="flex h-full items-center justify-center bg-[#0A0A0A]">
-      <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+    <div className="flex h-full items-center justify-center bg-slate-50">
+      <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
     </div>
   );
 
   return (
-    <div className="min-h-full bg-[#0A0A0A] p-6 lg:p-12 overflow-y-auto">
+    <div className="min-h-full bg-slate-50 p-6 lg:p-12 overflow-y-auto">
       <div className="max-w-2xl mx-auto space-y-8">
         
         <header className="mb-10 text-center">
-          <div className="inline-flex h-12 w-12 rounded-2xl bg-indigo-500/10 items-center justify-center mb-4 border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
-            <User className="h-6 w-6 text-indigo-400" />
+          <div className="inline-flex h-12 w-12 rounded-2xl bg-orange-100 items-center justify-center mb-4 border border-orange-200 shadow-sm">
+            <User className="h-6 w-6 text-orange-600" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Ton Profil Étudiant</h1>
-          <p className="text-zinc-400">ORI s'adapte à toi. Paramètre tes infos pour une orientation sur-mesure.</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Ton Profil Étudiant</h1>
+          <p className="text-slate-500">ORI s'adapte à toi. Paramètre tes infos pour une orientation sur-mesure.</p>
         </header>
 
         {/* Stepper */}
@@ -116,23 +116,23 @@ export default function ProfilePage() {
           {[1, 2, 3, 4].map(num => (
             <div key={num} className="flex items-center">
               <div className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border transition-colors",
-                step === num ? "bg-indigo-600 border-indigo-500 text-white" : 
-                step > num ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-300" : "bg-[#1A1A1A] border-[#2C2C2C] text-zinc-500"
+                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border transition-colors shadow-sm",
+                step === num ? "bg-orange-500 border-orange-500 text-white" : 
+                step > num ? "bg-orange-100 border-orange-200 text-orange-600" : "bg-white border-slate-200 text-slate-400"
               )}>
                 {step > num ? <Check className="w-4 h-4" /> : num}
               </div>
               {num < 4 && (
                 <div className={cn(
                   "w-12 h-0.5 mx-2",
-                  step > num ? "bg-indigo-500/50" : "bg-[#2C2C2C]"
+                  step > num ? "bg-orange-200" : "bg-slate-200"
                 )} />
               )}
             </div>
           ))}
         </div>
 
-        <div className="bg-[#121212] border border-[#2C2C2C] rounded-3xl p-8 shadow-xl relative overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm relative overflow-hidden">
           <AnimatePresence mode="wait">
             {/* STEP 1 */}
             {step === 1 && (
@@ -140,39 +140,39 @@ export default function ProfilePage() {
                 key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <h2 className="text-2xl font-semibold text-white">Les bases</h2>
+                <h2 className="text-2xl font-bold text-slate-900">Les bases</h2>
                 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm text-zinc-400 font-medium flex items-center gap-2">
-                      <User className="w-4 h-4" /> Ton Prénom
+                    <label className="text-sm text-slate-600 font-semibold flex items-center gap-2">
+                      <User className="w-4 h-4 text-slate-400" /> Ton Prénom
                     </label>
-                    <Input value={name} onChange={e => setName(e.target.value)} placeholder="Alex" className="bg-[#1A1A1A] border-[#2C2C2C]" />
+                    <Input value={name} onChange={e => setName(e.target.value)} placeholder="Alex" className="bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500" />
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-sm text-zinc-400 font-medium flex items-center gap-2">
-                      <MapPin className="w-4 h-4" /> Ta Ville
+                    <label className="text-sm text-slate-600 font-semibold flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-slate-400" /> Ta Ville
                     </label>
-                    <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Paris, Lyon..." className="bg-[#1A1A1A] border-[#2C2C2C]" />
+                    <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Paris, Lyon..." className="bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500" />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm text-zinc-400 font-medium flex items-center gap-2">
-                      <GraduationCap className="w-4 h-4" /> Ton Niveau Actuel
+                    <label className="text-sm text-slate-600 font-semibold flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4 text-slate-400" /> Ton Niveau Actuel
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       {LEVELS.slice(0,4).map(l => (
                         <button 
                           key={l} onClick={() => setLevel(l)}
-                          className={cn("py-2 rounded-lg text-sm border transition-all", level === l ? "bg-indigo-600 border-indigo-500 text-white" : "bg-[#1A1A1A] border-[#2C2C2C] text-zinc-400 hover:bg-[#222222]")}
+                          className={cn("py-2 rounded-lg text-sm border transition-all font-medium", level === l ? "bg-orange-500 border-orange-500 text-white shadow-sm" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50")}
                         >{l}</button>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                <Button onClick={() => setStep(2)} disabled={!name || !city || !level} className="w-full bg-white text-black hover:bg-zinc-200 mt-4">
+                <Button onClick={() => setStep(2)} disabled={!name || !city || !level} className="w-full bg-slate-900 text-white hover:bg-slate-800 mt-4 rounded-xl">
                   Suivant <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </motion.div>
@@ -184,10 +184,10 @@ export default function ProfilePage() {
                 key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
-                  <Sparkles className="w-6 h-6 text-indigo-400" /> Tes Centres d'Intérêt
+                <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-orange-500" /> Tes Centres d'Intérêt
                 </h2>
-                <p className="text-sm text-zinc-400 mb-6">Sélectionne les domaines qui t'attirent le plus.</p>
+                <p className="text-sm text-slate-500 mb-6">Sélectionne les domaines qui t'attirent le plus.</p>
                 
                 <div className="flex flex-wrap gap-3">
                   {INTERESTS_LIST.map(interest => (
@@ -195,10 +195,10 @@ export default function ProfilePage() {
                       key={interest}
                       onClick={() => toggleInterest(interest)}
                       className={cn(
-                        "px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200",
+                        "px-4 py-2 rounded-full text-sm font-semibold border transition-all duration-200",
                         interests.includes(interest) 
-                          ? "bg-indigo-500/20 border-indigo-500 text-indigo-300 scale-105 shadow-[0_0_15px_rgba(99,102,241,0.2)]" 
-                          : "bg-[#1A1A1A] border-[#2C2C2C] text-zinc-400 hover:border-zinc-500"
+                          ? "bg-orange-50 border-orange-500 text-orange-700 scale-[1.03] shadow-sm" 
+                          : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                       )}
                     >
                       {interest}
@@ -207,8 +207,8 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="flex gap-4 mt-8">
-                  <Button variant="outline" onClick={() => setStep(1)} className="border-[#2C2C2C] text-white hover:bg-[#2C2C2C]">Retour</Button>
-                  <Button onClick={() => setStep(3)} disabled={interests.length === 0} className="flex-1 bg-white text-black hover:bg-zinc-200">
+                  <Button variant="outline" onClick={() => setStep(1)} className="border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl">Retour</Button>
+                  <Button onClick={() => setStep(3)} disabled={interests.length === 0} className="flex-1 bg-slate-900 text-white hover:bg-slate-800 rounded-xl">
                     Suivant <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
@@ -221,24 +221,24 @@ export default function ProfilePage() {
                 key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
-                  <TrendingUp className="w-6 h-6 text-indigo-400" /> Tes Points Forts
+                <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                  <TrendingUp className="w-6 h-6 text-orange-500" /> Tes Points Forts
                 </h2>
-                <p className="text-sm text-zinc-400">Qu'est-ce qui te caractérise ? Tes qualités utiles pour l'orientation.</p>
+                <p className="text-sm text-slate-500">Qu'est-ce qui te caractérise ? Tes qualités utiles pour l'orientation.</p>
                 
                 <div className="space-y-2">
                   <Input 
                     value={strengthsStr} 
                     onChange={e => setStrengthsStr(e.target.value)} 
                     placeholder="Ex: Créatif, Bon en maths, Aisance à l'oral..." 
-                    className="bg-[#1A1A1A] border-[#2C2C2C] h-12" 
+                    className="bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500 h-12" 
                   />
-                  <p className="text-xs text-zinc-500">Sépare par des virgules.</p>
+                  <p className="text-xs text-slate-400">Sépare par des virgules.</p>
                 </div>
 
                 <div className="flex gap-4 mt-8">
-                  <Button variant="outline" onClick={() => setStep(2)} className="border-[#2C2C2C] text-white hover:bg-[#2C2C2C]">Retour</Button>
-                  <Button onClick={saveProfile} disabled={saving} className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:opacity-90">
+                  <Button variant="outline" onClick={() => setStep(2)} className="border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl">Retour</Button>
+                  <Button onClick={saveProfile} disabled={saving} className="flex-1 bg-orange-500 text-white hover:bg-orange-600 rounded-xl shadow-md">
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Terminer et Sauvegarder"}
                   </Button>
                 </div>
@@ -251,26 +251,29 @@ export default function ProfilePage() {
                 key="step4" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
                 className="text-center space-y-6 py-4"
               >
-                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/30">
-                  <Check className="w-10 h-10 text-green-400" />
+                <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-200">
+                  <Check className="w-10 h-10 text-green-500" />
                 </div>
-                <h2 className="text-3xl font-bold text-white">Profil Prêt !</h2>
-                <p className="text-zinc-400 max-w-md mx-auto">
-                  Ton contexte est maintenant actif. ORI connaît ton profil et l'utilisera pour adapter ses discussions, te générer des documents et te trouver les meilleurs salons.
+                <h2 className="text-3xl font-bold text-slate-900">Profil Prêt !</h2>
+                <p className="text-slate-500 max-w-md mx-auto leading-relaxed">
+                  Ton contexte est maintenant actif. L'Assistant ORI connaît ton profil et l'utilisera pour adapter ses réponses, générer tes documents et filtrer tes événements.
                 </p>
 
-                <div className="bg-[#1A1A1A] border border-[#2C2C2C] rounded-xl p-4 text-left max-w-sm mx-auto mt-6">
-                  <ul className="space-y-2 text-sm text-zinc-300">
-                    <li><strong className="text-white">Nom:</strong> {name}</li>
-                    <li><strong className="text-white">Lieu:</strong> {city}</li>
-                    <li><strong className="text-white">Niveau:</strong> {level}</li>
-                    <li className="flex flex-wrap gap-1 mt-2">
-                      {interests.map(i => <span key={i} className="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded text-xs">{i}</span>)}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 text-left max-w-sm mx-auto mt-6 shadow-sm">
+                  <ul className="space-y-3 text-sm text-slate-600">
+                    <li className="flex justify-between items-center"><strong className="text-slate-900">Nom</strong> <span>{name}</span></li>
+                    <li className="flex justify-between items-center"><strong className="text-slate-900">Lieu</strong> <span>{city}</span></li>
+                    <li className="flex justify-between items-center"><strong className="text-slate-900">Niveau</strong> <span>{level}</span></li>
+                    <li className="pt-2 border-t border-slate-200">
+                      <strong className="text-slate-900 block mb-2">Intérêts</strong>
+                      <div className="flex flex-wrap gap-1.5">
+                        {interests.map(i => <span key={i} className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs font-semibold">{i}</span>)}
+                      </div>
                     </li>
                   </ul>
                 </div>
 
-                <Button onClick={() => setStep(1)} variant="outline" className="border-[#2C2C2C] text-white hover:bg-[#2C2C2C] mt-6">
+                <Button onClick={() => setStep(1)} variant="outline" className="border-slate-200 text-slate-700 hover:bg-slate-50 mt-6 rounded-xl font-medium">
                   Modifier mon profil
                 </Button>
               </motion.div>
