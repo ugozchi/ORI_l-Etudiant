@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { User, MapPin, GraduationCap, Sparkles, UploadCloud, ChevronRight, Loader2, FileText, CheckCircle2, Target, BrainCircuit, Rocket, Activity } from 'lucide-react';
+import { User, MapPin, GraduationCap, Sparkles, UploadCloud, ChevronRight, Loader2, FileText, CheckCircle2, Target, BrainCircuit, Rocket, Activity, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/utils/supabase/client';
@@ -29,6 +29,14 @@ export default function ProfilePage() {
   const [interests, setInterests] = useState<string[]>([]);
   const [strengths, setStrengths] = useState([{ name: 'Rigueur', val: 70 }, { name: 'Créativité', val: 50 }, { name: 'Logique', val: 80 }]);
   
+  // Chat state
+  const [chatMessages, setChatMessages] = useState<{role: 'ori'|'user', content: string}[]>([
+    { role: 'ori', content: "Salut ! J'ai bien analysé ton document. Pour affiner ton profil, quel est ton métier ou domaine de rêve ?" }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const supabase = createClient();
@@ -50,7 +58,7 @@ export default function ProfilePage() {
               setCity(p.city);
               setLevel(p.level);
               setInterests(p.interests || []);
-              setStep(3); // Go to Persona Dashboard directly if profile exists
+              setStep(4); // Go to Persona Dashboard directly if profile exists
             }
           }
         }
@@ -62,6 +70,11 @@ export default function ProfilePage() {
     };
     fetchProfile();
   }, [supabase]);
+
+  // Auto-scroll chat
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
 
   const toggleInterest = (interest: string) => {
     if (interests.includes(interest)) setInterests(prev => prev.filter(i => i !== interest));
@@ -86,8 +99,34 @@ export default function ProfilePage() {
           { name: 'Rigueur', val: 90 },
           { name: 'Travail en équipe', val: 75 }
         ]);
-        setStep(2); // Go to Verification step
+        setStep(2); // Go to Chat step
       }, 3500);
+    }
+  };
+
+  const handleChatSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    // Add user message
+    setChatMessages(prev => [...prev, { role: 'user', content: chatInput }]);
+    setChatInput('');
+
+    if (questionIndex === 0) {
+      setQuestionIndex(1);
+      // Simulate ORI thinking
+      setTimeout(() => {
+        setChatMessages(prev => [...prev, { role: 'ori', content: "Super intéressant ! Et y a-t-il une matière ou une tâche que tu détestes faire ?" }]);
+      }, 1000);
+    } else if (questionIndex === 1) {
+      setQuestionIndex(2);
+      // Simulate ORI finishing up
+      setTimeout(() => {
+        setChatMessages(prev => [...prev, { role: 'ori', content: "C'est noté. Je génère ton Persona..." }]);
+        setTimeout(() => {
+          setStep(3); // Go to Verification
+        }, 1500);
+      }, 1000);
     }
   };
 
@@ -109,7 +148,7 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      setStep(3);
+      setStep(4);
     } catch (err) {
       console.error(err);
     } finally {
@@ -131,7 +170,7 @@ export default function ProfilePage() {
 
       <div className="max-w-4xl mx-auto space-y-8 relative z-10">
         
-        {step < 3 && (
+        {step < 4 && (
           <header className="mb-10 text-center">
             <div className="inline-flex h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-100 to-orange-50 items-center justify-center mb-6 shadow-sm border border-orange-200">
               <Sparkles className="h-7 w-7 text-orange-600" />
@@ -139,6 +178,26 @@ export default function ProfilePage() {
             <h1 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">Générateur de Persona</h1>
             <p className="text-lg text-slate-500 font-medium">Laisse ORI analyser tes bulletins pour créer ton profil sur-mesure.</p>
           </header>
+        )}
+
+        {/* Stepper Indicator */}
+        {step < 4 && (
+          <div className="flex justify-center mb-8">
+            <div className="flex items-center gap-2">
+              {[1, 2, 3].map((num) => (
+                <div key={num} className="flex items-center">
+                  <div className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all",
+                    step === num ? "bg-orange-500 text-white shadow-md shadow-orange-500/30" : 
+                    step > num ? "bg-orange-100 text-orange-500" : "bg-white text-slate-400 border border-slate-200"
+                  )}>
+                    {step > num ? <CheckCircle2 className="w-4 h-4" /> : num}
+                  </div>
+                  {num < 3 && <div className={cn("w-10 h-1 rounded-full mx-2", step > num ? "bg-orange-200" : "bg-slate-200")} />}
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         <AnimatePresence mode="wait">
@@ -174,7 +233,7 @@ export default function ProfilePage() {
                     <div className="flex-grow border-t border-slate-200"></div>
                   </div>
 
-                  <Button variant="outline" onClick={() => setStep(2)} className="w-full h-14 rounded-2xl border-slate-200 text-slate-600 font-bold hover:bg-white hover:border-slate-300 shadow-sm">
+                  <Button variant="outline" onClick={() => setStep(3)} className="w-full h-14 rounded-2xl border-slate-200 text-slate-600 font-bold hover:bg-white hover:border-slate-300 shadow-sm">
                     Remplir manuellement
                   </Button>
                 </div>
@@ -210,10 +269,59 @@ export default function ProfilePage() {
             </motion.div>
           )}
 
-          {/* STEP 2: VERIFICATION & MANUAL ENTRY */}
+          {/* STEP 2: MINI-CHAT ORI */}
           {step === 2 && (
             <motion.div 
               key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+              className="max-w-2xl mx-auto bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden flex flex-col h-[500px]"
+            >
+              <div className="bg-slate-900 p-4 flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center shadow-inner">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white">Assistant ORI</h3>
+                  <p className="text-slate-400 text-xs font-medium">Analyse en cours...</p>
+                </div>
+              </div>
+
+              <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50">
+                {chatMessages.map((msg, i) => (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    key={i} 
+                    className={cn(
+                      "max-w-[80%] rounded-2xl p-4 shadow-sm",
+                      msg.role === 'ori' 
+                        ? "bg-white border border-slate-200 text-slate-800 rounded-tl-sm self-start" 
+                        : "bg-orange-500 text-white rounded-tr-sm self-end ml-auto"
+                    )}
+                  >
+                    <p className="text-sm font-medium leading-relaxed">{msg.content}</p>
+                  </motion.div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <form onSubmit={handleChatSubmit} className="p-4 bg-white border-t border-slate-100 flex gap-2">
+                <Input 
+                  value={chatInput} 
+                  onChange={e => setChatInput(e.target.value)}
+                  placeholder="Écris ta réponse ici..." 
+                  className="flex-1 bg-slate-50 border-slate-200 h-12 rounded-xl focus-visible:ring-orange-500"
+                  disabled={questionIndex > 1}
+                />
+                <Button type="submit" disabled={!chatInput.trim() || questionIndex > 1} className="w-12 h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white p-0 flex items-center justify-center">
+                  <Send className="w-5 h-5" />
+                </Button>
+              </form>
+            </motion.div>
+          )}
+
+          {/* STEP 3: VERIFICATION & MANUAL ENTRY */}
+          {step === 3 && (
+            <motion.div 
+              key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
               className="bg-white border border-slate-200 rounded-[2rem] p-8 md:p-12 shadow-xl"
             >
               <div className="flex items-center gap-3 mb-8 pb-6 border-b border-slate-100">
@@ -290,10 +398,10 @@ export default function ProfilePage() {
             </motion.div>
           )}
 
-          {/* STEP 3: PERSONA DASHBOARD */}
-          {step === 3 && (
+          {/* STEP 4: PERSONA DASHBOARD */}
+          {step === 4 && (
             <motion.div 
-              key="step3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+              key="step4" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
               className="space-y-8"
             >
               {/* Dashboard Header */}
