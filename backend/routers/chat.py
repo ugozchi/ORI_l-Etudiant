@@ -19,7 +19,8 @@ def post_chat(
         # Appel à Vertex AI via le service enveloppé
         result = ori_client.chat(
             message=request.message,
-            thread_id=request.thread_id
+            thread_id=request.thread_id,
+            user_id=user_id
         )
         
         return ChatResponse(

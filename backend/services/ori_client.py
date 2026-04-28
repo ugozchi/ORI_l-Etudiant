@@ -3,7 +3,7 @@ from vertexai.preview import reasoning_engines
 import uuid
 import os
 from core.config import settings
-
+from routers.profile import PROFILES_DB
 class OriClient:
     _instance = None
     _engine = None
@@ -30,7 +30,7 @@ class OriClient:
         )
         self._engine = reasoning_engines.ReasoningEngine(settings.ori_engine_id)
 
-    def chat(self, message: str, thread_id: str = None) -> dict:
+    def chat(self, message: str, thread_id: str = None, user_id: str = None) -> dict:
         """
         Envoie un message au modèle ORI
         Retourne la réponse et l'ID du thread utilisé
@@ -38,10 +38,27 @@ class OriClient:
         if not thread_id:
             thread_id = str(uuid.uuid4())
 
+        enriched_message = message
+        # Si on a un profil pour ce user_id, on l'injecte dans le message
+        if user_id and user_id in PROFILES_DB:
+            p = PROFILES_DB[user_id]
+            interests = ", ".join(p.get("interests", []))
+            strengths = ", ".join(p.get("strengths", []))
+            context = (
+                f"[CONTEXTE PROFIL ÉTUDIANT] "
+                f"Prénom: {p.get('name', 'Inconnu')}, "
+                f"Ville: {p.get('city', 'Inconnue')}, "
+                f"Niveau: {p.get('level', 'Inconnu')}, "
+                f"Intérêts: {interests}, "
+                f"Points forts: {strengths}. "
+                f"[FIN CONTEXTE]\n\n{message}"
+            )
+            enriched_message = context
+
         # L'appel à l'API
         response = self._engine.query(
             config={"thread_id": thread_id}, 
-            message=message
+            message=enriched_message
         )
         
         text_response = str(response)

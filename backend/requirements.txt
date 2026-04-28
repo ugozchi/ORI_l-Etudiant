@@ -6,3 +6,5 @@ pydantic>=2.6.3
 pydantic-settings>=2.2.1
 python-dotenv>=1.0.1
 pyjwt>=2.8.0
+qrcode>=7.4.2
+Pillow>=10.2.0
