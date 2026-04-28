@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Send, User, Bot, Loader2, PlusCircle, MessageSquare } from 'lucide-react';
+import { Send, User, Bot, Loader2, PlusCircle, MessageSquare, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -28,6 +28,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
@@ -127,6 +128,17 @@ export default function ChatPage() {
     if (loading) return;
     const newId = crypto.randomUUID();
     setCurrentThreadId(newId);
+    // On mobile, auto close sidebar when composing a new chat
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  const handleSelectThread = (threadId: string) => {
+    setCurrentThreadId(threadId);
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -210,15 +222,18 @@ export default function ChatPage() {
   return (
     <div className="flex h-full bg-[#0A0A0A] overflow-hidden">
       
-      {/* Sidebar */}
-      <div className="w-64 bg-[#111111] border-r border-[#222222] hidden md:flex flex-col">
-        <div className="p-4">
+      {/* Sidebar for Threads */}
+      <div className={cn(
+        "bg-[#111111] border-r border-[#222222] hidden md:flex flex-col transition-all duration-300 relative",
+        isSidebarOpen ? "w-64" : "w-0 border-r-0 opacity-0 overflow-hidden"
+      )}>
+        <div className="p-4 pt-6 flex items-center justify-between">
           <Button 
             onClick={handleNewChat}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 rounded-xl flex items-center gap-2 text-white"
+            className="flex-1 bg-indigo-600 hover:bg-indigo-500 rounded-xl flex items-center justify-center gap-2 text-white"
           >
             <PlusCircle className="w-4 h-4" />
-            Nouveau Chat
+            Nouveau
           </Button>
         </div>
         <ScrollArea className="flex-1 px-2">
@@ -226,7 +241,7 @@ export default function ChatPage() {
             {threads.map((thread) => (
               <button
                 key={thread.id}
-                onClick={() => setCurrentThreadId(thread.id)}
+                onClick={() => handleSelectThread(thread.id)}
                 className={cn(
                   "w-full text-left px-3 py-3 rounded-xl text-sm flex items-center gap-3 transition-colors",
                   currentThreadId === thread.id 
@@ -243,8 +258,22 @@ export default function ChatPage() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col relative h-full">
-        <div className="flex-1 overflow-y-auto p-4 md:p-8" ref={scrollRef}>
+      <div className="flex-1 flex flex-col relative h-full min-w-0">
+        
+        {/* Toggle Button Container for Top Left of Chat Area */}
+        <div className="absolute top-4 left-4 z-10 hidden md:block">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="text-zinc-400 hover:text-white bg-[#111111] border border-[#222222] shadow-sm rounded-xl h-10 w-10 flex items-center justify-center"
+            title={isSidebarOpen ? "Masquer l'historique" : "Afficher l'historique"}
+          >
+             {isSidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
+          </Button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-16 md:pt-8" ref={scrollRef}>
           <div className="max-w-3xl mx-auto space-y-6 pb-36">
             {currentMessages.map((msg: Message) => (
               <div
@@ -288,8 +317,8 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A] to-[#0A0A0A] pt-4 pb-6 px-4 md:px-8">
-          <div className="max-w-3xl mx-auto">
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A] to-[#0A0A0A] pt-4 pb-6 px-4 md:px-8 pointer-events-none">
+          <div className="max-w-3xl mx-auto pointer-events-auto">
             <form 
               onSubmit={handleSubmit}
               className="relative flex items-center bg-[#1A1A1A] border border-[#2C2C2C] rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-indigo-500 shadow-2xl transition-all"
