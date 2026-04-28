@@ -220,17 +220,17 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex h-full bg-[#0A0A0A] overflow-hidden">
+    <div className="flex h-full bg-slate-50 overflow-hidden">
       
       {/* Sidebar for Threads */}
       <div className={cn(
-        "bg-[#111111] border-r border-[#222222] hidden md:flex flex-col transition-all duration-300 relative",
+        "bg-white border-r border-slate-200 hidden md:flex flex-col transition-all duration-300 relative",
         isSidebarOpen ? "w-64" : "w-0 border-r-0 opacity-0 overflow-hidden"
       )}>
         <div className="p-4 pt-6 flex items-center justify-between">
           <Button 
             onClick={handleNewChat}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-500 rounded-xl flex items-center justify-center gap-2 text-white"
+            className="flex-1 bg-orange-500 hover:bg-orange-600 rounded-xl flex items-center justify-center gap-2 text-white font-medium shadow-sm transition-all"
           >
             <PlusCircle className="w-4 h-4" />
             Nouveau
@@ -245,8 +245,8 @@ export default function ChatPage() {
                 className={cn(
                   "w-full text-left px-3 py-3 rounded-xl text-sm flex items-center gap-3 transition-colors",
                   currentThreadId === thread.id 
-                    ? "bg-[#222222] text-white" 
-                    : "text-zinc-400 hover:bg-[#1A1A1A] hover:text-zinc-200"
+                    ? "bg-slate-100 text-slate-900 font-medium" 
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
               >
                 <MessageSquare className="w-4 h-4 shrink-0" />
@@ -266,7 +266,7 @@ export default function ChatPage() {
             variant="ghost" 
             size="icon" 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="text-zinc-400 hover:text-white bg-[#111111] border border-[#222222] shadow-sm rounded-xl h-10 w-10 flex items-center justify-center"
+            className="text-slate-500 hover:text-slate-900 bg-white border border-slate-200 shadow-sm rounded-xl h-10 w-10 flex items-center justify-center"
             title={isSidebarOpen ? "Masquer l'historique" : "Afficher l'historique"}
           >
              {isSidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
@@ -284,19 +284,19 @@ export default function ChatPage() {
                 )}
               >
                 <div className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+                  "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm",
                   msg.role === 'user' 
-                    ? "bg-indigo-600 ml-4" 
-                    : "bg-gradient-to-tr from-indigo-500 to-purple-500 mr-4"
+                    ? "bg-orange-500 ml-4" 
+                    : "bg-slate-900 mr-4"
                 )}>
                   {msg.role === 'user' ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
                 </div>
                 
                 <div className={cn(
-                  "py-3 px-4 rounded-2xl max-w-[80%]",
+                  "py-3 px-4 rounded-2xl max-w-[80%] shadow-sm",
                   msg.role === 'user' 
-                    ? "bg-indigo-600 text-white rounded-tr-sm" 
-                    : "bg-[#1A1A1A] border border-[#2C2C2C] text-zinc-200 rounded-tl-sm"
+                    ? "bg-orange-500 text-white rounded-tr-sm" 
+                    : "bg-white border border-slate-200 text-slate-800 rounded-tl-sm"
                 )}>
                   <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</p>
                 </div>
@@ -305,42 +305,42 @@ export default function ChatPage() {
             
             {loading && (
               <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 mr-4 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full bg-slate-900 mr-4 flex items-center justify-center shrink-0 shadow-sm">
                   <Bot className="w-4 h-4 text-white" />
                 </div>
-                <div className="py-3 px-4 rounded-2xl max-w-[80%] bg-[#1A1A1A] border border-[#2C2C2C] rounded-tl-sm flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
-                  <span className="text-sm text-zinc-400">ORI est en train d'écrire...</span>
+                <div className="py-3 px-4 rounded-2xl max-w-[80%] bg-white border border-slate-200 rounded-tl-sm flex items-center gap-2 shadow-sm">
+                  <Loader2 className="w-4 h-4 text-orange-500 animate-spin" />
+                  <span className="text-sm text-slate-500">ORI réfléchit...</span>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A] to-[#0A0A0A] pt-4 pb-6 px-4 md:px-8 pointer-events-none">
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent pt-12 pb-6 px-4 md:px-8 pointer-events-none">
           <div className="max-w-3xl mx-auto pointer-events-auto">
             <form 
               onSubmit={handleSubmit}
-              className="relative flex items-center bg-[#1A1A1A] border border-[#2C2C2C] rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-indigo-500 shadow-2xl transition-all"
+              className="relative flex items-center bg-white border border-slate-200 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-orange-500 shadow-md transition-all"
             >
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Posez-moi une question sur votre orientation..."
-                className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-white placeholder:text-zinc-500 py-6 pl-4 pr-16 h-14"
+                className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-slate-900 placeholder:text-slate-400 py-6 pl-4 pr-16 h-14"
                 disabled={loading}
               />
               <Button 
                 type="submit" 
                 size="icon"
                 disabled={!input.trim() || loading}
-                className="absolute right-2 h-10 w-10 bg-indigo-600 hover:bg-indigo-500 rounded-xl disabled:opacity-50"
+                className="absolute right-2 h-10 w-10 bg-orange-500 hover:bg-orange-600 rounded-xl disabled:opacity-50 transition-colors shadow-sm"
               >
                 <Send className="h-4 w-4 text-white" />
               </Button>
             </form>
             <div className="text-center mt-3">
-              <span className="text-xs text-zinc-500">ORI peut se tromper. Vérifiez les informations importantes.</span>
+              <span className="text-xs text-slate-500">ORI peut se tromper. Vérifiez les informations importantes.</span>
             </div>
           </div>
         </div>

@@ -91,36 +91,36 @@ export default function NewsletterPage() {
   };
 
   return (
-    <div className="min-h-full bg-[#0A0A0A] overflow-y-auto">
+    <div className="min-h-full bg-slate-50 overflow-y-auto">
       
       {/* Heroic Subscription Banner */}
-      <section className="relative px-6 py-16 md:py-24 border-b border-[#2C2C2C] overflow-hidden">
+      <section className="relative px-6 py-16 md:py-24 border-b border-slate-200 overflow-hidden bg-white">
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-[#0A0A0A] to-purple-900/20" />
-        <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-96 h-96 bg-indigo-500/10 blur-[100px] rounded-full" />
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 via-white to-orange-100/30" />
+        <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-96 h-96 bg-orange-400/10 blur-[100px] rounded-full" />
         
         <div className="relative max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-10">
           <div className="flex-1 text-center md:text-left space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-300 text-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-orange-50 border border-orange-200 rounded-full text-orange-600 text-sm font-bold shadow-sm">
               <Sparkles className="w-4 h-4" />
               Intelligence Artificielle
             </div>
             
-            <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
               L'orientation qui vient <br className="hidden md:block" /> 
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
+              <span className="text-orange-500">
                 directement à toi.
               </span>
             </h1>
             
-            <p className="text-lg text-zinc-400 max-w-xl mx-auto md:mx-0">
+            <p className="text-lg text-slate-600 max-w-xl mx-auto md:mx-0 font-medium leading-relaxed">
               Chaque semaine, reçois une sélection d'articles, vidéos et opportunités choisis par ORI uniquement pour ton profil.
             </p>
           </div>
 
           <div className="w-full max-w-md">
-            <div className="bg-[#121212] border border-[#2C2C2C] rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
+            <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-orange-500" />
               
               {subscribed ? (
                 <motion.div 
@@ -128,40 +128,40 @@ export default function NewsletterPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="py-8 flex flex-col items-center text-center space-y-4"
                 >
-                  <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
-                    <CheckCircle2 className="w-8 h-8 text-green-400" />
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center shadow-sm">
+                    <CheckCircle2 className="w-8 h-8 text-green-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-white">Inscription Réussie !</h3>
-                  <p className="text-zinc-400 text-sm">Tu recevras ta première newsletter sur {email} très bientôt.</p>
+                  <h3 className="text-xl font-bold text-slate-900">Inscription Réussie !</h3>
+                  <p className="text-slate-500 text-sm font-medium">Tu recevras ta première newsletter sur {email} très bientôt.</p>
                 </motion.div>
               ) : (
-                <form onSubmit={handleSubscribe} className="space-y-5">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-zinc-300">Mon e-mail</label>
+                <form onSubmit={handleSubscribe} className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-900">Mon e-mail</label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-5 w-5 text-zinc-500" />
+                      <Mail className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
                       <Input 
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="etudiant@ecole.com"
-                        className="pl-10 bg-[#1A1A1A] border-[#2C2C2C] text-white focus-visible:ring-indigo-500 h-11"
+                        className="pl-12 bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500 focus-visible:border-orange-500 h-12 shadow-sm rounded-xl font-medium"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-zinc-300">Fréquence</label>
-                    <div className="flex gap-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-900">Fréquence</label>
+                    <div className="flex gap-3">
                       <button 
                         type="button"
                         onClick={() => setFrequency('hebdo')}
                         className={cn(
-                          "flex-1 py-2.5 rounded-xl text-sm font-medium transition-all",
+                          "flex-1 py-3 rounded-xl text-sm font-bold transition-all border-2",
                           frequency === 'hebdo' 
-                            ? "bg-indigo-600 text-white border border-indigo-500 shadow-md" 
-                            : "bg-[#1A1A1A] text-zinc-400 border border-[#2C2C2C] hover:bg-[#222222]"
+                            ? "bg-orange-50 text-orange-700 border-orange-500 shadow-sm" 
+                            : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
                         )}
                       >
                         Hebdomadaire
@@ -170,10 +170,10 @@ export default function NewsletterPage() {
                         type="button"
                         onClick={() => setFrequency('mensuel')}
                         className={cn(
-                          "flex-1 py-2.5 rounded-xl text-sm font-medium transition-all",
+                          "flex-1 py-3 rounded-xl text-sm font-bold transition-all border-2",
                           frequency === 'mensuel' 
-                            ? "bg-purple-600 text-white border border-purple-500 shadow-md" 
-                            : "bg-[#1A1A1A] text-zinc-400 border border-[#2C2C2C] hover:bg-[#222222]"
+                            ? "bg-orange-50 text-orange-700 border-orange-500 shadow-sm" 
+                            : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
                         )}
                       >
                         Mensuelle
@@ -183,13 +183,13 @@ export default function NewsletterPage() {
 
                   <Button 
                     type="submit" 
-                    className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white font-semibold rounded-xl"
+                    className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-md transition-all text-base"
                     disabled={subscribing || !email}
                   >
                     {subscribing ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Inscription...</>
+                      <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Inscription...</>
                     ) : (
-                      <><Send className="mr-2 h-4 w-4" /> M'abonner</>
+                      <><Send className="mr-2 h-5 w-5" /> M'abonner</>
                     )}
                   </Button>
                 </form>
@@ -201,17 +201,17 @@ export default function NewsletterPage() {
 
       {/* Preview Section */}
       <section className="px-6 py-12 md:py-20 max-w-6xl mx-auto">
-        <div className="mb-10">
-          <h2 className="text-2xl font-bold text-white mb-2">Un aperçu de ce qui t'attend</h2>
-          <p className="text-zinc-400">Ces contenus ont été sélectionnés par ORI basé sur tes affinités actuelles.</p>
+        <div className="mb-10 text-center md:text-left">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Un aperçu de ce qui t'attend</h2>
+          <p className="text-slate-500 font-medium">Ces contenus ont été sélectionnés par ORI basé sur tes affinités actuelles.</p>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+            <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {articles.map((article, i) => (
               <motion.a 
                 href={article.url}
@@ -219,42 +219,41 @@ export default function NewsletterPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="group flex flex-col bg-[#121212] border border-[#2C2C2C] rounded-2xl overflow-hidden hover:border-indigo-500/50 transition-all hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="group flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden hover:border-orange-300 transition-all hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
               >
                 {/* Image Card header */}
-                <div className="relative h-40 overflow-hidden bg-[#1A1A1A]">
+                <div className="relative h-48 overflow-hidden bg-slate-100">
                   <div 
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
                     style={{ backgroundImage: `url(${article.image_url})` }}
                   />
-                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#121212] to-transparent" />
                   
                   {/* Topic Badge */}
-                  <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10">
-                    <span className="text-xs font-semibold text-white tracking-wide">{article.topic}</span>
+                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm">
+                    <span className="text-xs font-bold text-slate-900 tracking-wide uppercase">{article.topic}</span>
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="p-5 flex flex-col flex-1">
-                  <div className="flex items-center gap-2 mb-3 text-xs text-indigo-400 font-medium bg-indigo-500/10 w-fit px-2 py-0.5 rounded border border-indigo-500/20">
+                <div className="p-6 flex flex-col flex-1">
+                  <div className="flex items-center gap-2 mb-4 text-xs text-orange-700 font-bold bg-orange-50 w-fit px-2.5 py-1 rounded-md border border-orange-200 uppercase tracking-wider">
                     {getTypeIcon(article.type)}
                     {article.type}
                   </div>
                   
-                  <h3 className="text-lg font-bold text-zinc-100 leading-tight mb-2 group-hover:text-indigo-400 transition-colors line-clamp-2">
+                  <h3 className="text-lg font-bold text-slate-900 leading-tight mb-3 group-hover:text-orange-600 transition-colors line-clamp-2">
                     {article.title}
                   </h3>
                   
-                  <p className="text-sm text-zinc-400 line-clamp-3 mb-4 flex-1">
+                  <p className="text-sm text-slate-600 line-clamp-3 mb-6 flex-1 font-medium leading-relaxed">
                     {article.summary}
                   </p>
                   
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-[#2C2C2C]">
-                    <span className="text-xs text-zinc-500 font-medium">
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">
                       {new Date(article.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </span>
-                    <ExternalLink className="w-4 h-4 text-zinc-500 group-hover:text-indigo-400 transition-colors" />
+                    <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors" />
                   </div>
                 </div>
               </motion.a>
