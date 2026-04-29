@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { User, MapPin, GraduationCap, Sparkles, UploadCloud, ChevronRight, Loader2, FileText, CheckCircle2, Target, BrainCircuit, Rocket, Activity, Send, Timer, Brain, Palette, Zap } from 'lucide-react';
+import { User, MapPin, GraduationCap, Sparkles, UploadCloud, ChevronRight, Loader2, FileText, CheckCircle2, Target, BrainCircuit, Rocket, Activity, Send, Timer, Brain, Palette, Zap, CheckCircle, BarChart3, FastForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/utils/supabase/client';
@@ -14,6 +14,15 @@ const INTERESTS_LIST = [
 ];
 
 const LEVELS = ["Seconde", "Première", "Terminale", "Bac+1", "Bac+2", "Bac+3"];
+
+const BEHAVIOR_SITS = [
+  { sit: "Face à un problème complexe :", opts: ["J'analyse chaque détail méthodiquement", "Je teste une solution rapidement au feeling"] },
+  { sit: "En travail d'équipe :", opts: ["Je prends le lead et distribue les rôles", "Je m'assure que tout le monde est écouté"] },
+  { sit: "Pour rendre un projet étudiant :", opts: ["Je suis très organisé à l'avance", "Je suis ultra efficace à la dernière minute"] },
+  { sit: "Dans un débat d'idées :", opts: ["J'utilise des faits et des chiffres", "Je joue sur l'émotion et l'inspiration"] },
+  { sit: "Face à l'échec :", opts: ["Je cherche à comprendre pourquoi rationnellement", "Je passe vite à autre chose de plus motivant"] },
+  { sit: "Quand on me donne une consigne floue :", opts: ["Je pose plein de questions pour clarifier", "J'interprète et je propose ma vision"] }
+];
 
 export default function ProfilePage() {
   const [step, setStep] = useState(1);
@@ -29,23 +38,20 @@ export default function ProfilePage() {
   const [interests, setInterests] = useState<string[]>([]);
   const [strengths, setStrengths] = useState([{ name: 'Rigueur', val: 70 }, { name: 'Créativité', val: 50 }, { name: 'Logique', val: 80 }]);
   
-  // Games state
-  const [gameIndex, setGameIndex] = useState(0);
-  const [gameLoading, setGameLoading] = useState(false);
+  // Games Arcade state
+  const [gameIndex, setGameIndex] = useState(0); // 0: Colors, 1: Math, 2: Behavior, 3: Results
+  const [gameTimer, setGameTimer] = useState(300); // 5 mins per block
+  const [scores, setScores] = useState({ logic: 0, math: 0, behavior: 0 });
+  const [levels, setLevels] = useState({ logic: 0, math: 0, behavior: 0 });
+
+  // Game 1: Dynamic Colors
+  const [colorGame, setColorGame] = useState({ gridSize: 2, baseColor: '', intruderColor: '', intruderIndex: 0 });
   
-  // Game 1 (Memory)
-  const [memSequence, setMemSequence] = useState<number[]>([]);
-  const [memInput, setMemInput] = useState<number[]>([]);
-  const [memPhase, setMemPhase] = useState<'idle' | 'showing' | 'playing'>('idle');
-  const [memActiveCell, setMemActiveCell] = useState<number | null>(null);
-  const [memError, setMemError] = useState(false);
-  const [memSuccess, setMemSuccess] = useState(false);
-
-  // Game 2 (Colors)
-  const [intruderIndex] = useState(Math.floor(Math.random() * 16));
-
-  // Game 3 (Math Timer)
-  const [gameTimer, setGameTimer] = useState(5000); // 5000ms
+  // Game 2: Dynamic Math
+  const [mathGame, setMathGame] = useState({ eq: '', ans: [0,0,0,0], correct: 0 });
+  
+  // Game 3: Behavior
+  const [behIdx, setBehIdx] = useState(0);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<{role: 'ori'|'user', content: string}[]>([
@@ -87,87 +93,113 @@ export default function ProfilePage() {
       }
     };
     fetchProfile();
+    
+    // Initialize first games
+    generateColorGame(0);
+    generateMathGame(0);
   }, [supabase]);
 
-  // GAME LOGIC ============================================
+  // GAME LOGIC GENERATORS =================================
 
-  // Game 1: Memory sequence engine
-  useEffect(() => {
-    if (step === 2 && gameIndex === 0 && memPhase === 'idle') {
-      const seq = [
-        Math.floor(Math.random()*9), 
-        Math.floor(Math.random()*9), 
-        Math.floor(Math.random()*9),
-        Math.floor(Math.random()*9)
-      ];
-      setMemSequence(seq);
-      setMemPhase('showing');
-      
-      let stepIdx = 0;
-      setTimeout(() => { // wait a bit before starting
-        const interval = setInterval(() => {
-          if (stepIdx < seq.length) {
-            setMemActiveCell(seq[stepIdx]);
-            setTimeout(() => setMemActiveCell(null), 300);
-            stepIdx++;
-          } else {
-            clearInterval(interval);
-            setMemPhase('playing');
-          }
-        }, 700);
-      }, 500);
-    }
-  }, [step, gameIndex, memPhase]);
-
-  const handleMemClick = (idx: number) => {
-    if (memPhase !== 'playing' || memError || memSuccess) return;
+  const generateColorGame = (level: number) => {
+    const size = Math.min(2 + Math.floor(level / 3), 5); // Starts 2x2, max 5x5
+    const numCells = size * size;
+    const hue = Math.floor(Math.random() * 360);
+    // Difficulty: lightness diff gets smaller
+    const diff = Math.max(25 - level * 3, 4); 
+    const baseL = 50;
+    const intrL = baseL + diff;
     
-    setMemActiveCell(idx);
-    setTimeout(() => setMemActiveCell(null), 200);
-
-    const newInp = [...memInput, idx];
-    setMemInput(newInp);
-    
-    if (newInp[newInp.length - 1] !== memSequence[newInp.length - 1]) {
-      setMemError(true);
-      setTimeout(() => setGameIndex(1), 800);
-      return;
-    }
-    
-    if (newInp.length === memSequence.length) {
-      setMemSuccess(true);
-      setTimeout(() => setGameIndex(1), 800);
-    }
+    setColorGame({
+      gridSize: size,
+      baseColor: `hsl(${hue}, 80%, ${baseL}%)`,
+      intruderColor: `hsl(${hue}, 80%, ${intrL}%)`,
+      intruderIndex: Math.floor(Math.random() * numCells)
+    });
   };
 
-  // Game 2: Colors
-  const handleColorClick = () => {
-    setGameIndex(2);
+  const generateMathGame = (level: number) => {
+    let a, b, op, correct;
+    if (level < 3) { // Easy
+      a = Math.floor(Math.random() * 10) + 1;
+      b = Math.floor(Math.random() * 10) + 1;
+      op = '+';
+      correct = a + b;
+    } else if (level < 8) { // Medium
+      a = Math.floor(Math.random() * 9) + 2;
+      b = Math.floor(Math.random() * 9) + 2;
+      op = '×';
+      correct = a * b;
+    } else { // Hard
+      a = Math.floor(Math.random() * 50) + 10;
+      b = Math.floor(Math.random() * 50) + 10;
+      op = '+';
+      correct = a + b;
+    }
+    
+    // Generate 3 wrong answers close to correct
+    const ansSet = new Set<number>([correct]);
+    while (ansSet.size < 4) {
+      let fake: number = correct + Math.floor(Math.random() * 14) - 7;
+      if (fake === correct || fake < 0) fake = correct + Math.floor(Math.random() * 5) + 1;
+      ansSet.add(fake);
+    }
+    const ansArr = Array.from(ansSet).sort(() => Math.random() - 0.5);
+    
+    setMathGame({ eq: `${a} ${op} ${b}`, ans: ansArr, correct });
   };
 
-  // Game 3: Timer
+  // Global Timer for current block
   useEffect(() => {
-    if (step === 2 && gameIndex === 2 && gameTimer > 0 && !gameLoading) {
+    if (step === 2 && gameIndex < 3 && gameTimer > 0) {
       const interval = setInterval(() => {
         setGameTimer(prev => {
-          if (prev <= 50) {
-            clearInterval(interval);
-            finishGames();
+          if (prev <= 1) {
+            advanceBlock(gameIndex + 1);
             return 0;
           }
-          return prev - 50;
+          return prev - 1;
         });
-      }, 50);
+      }, 1000);
       return () => clearInterval(interval);
     }
-  }, [step, gameIndex, gameTimer, gameLoading]);
+  }, [step, gameIndex, gameTimer]);
 
-  const finishGames = () => {
-    setGameLoading(true);
-    setTimeout(() => {
-      setGameLoading(false);
-      setStep(3);
-    }, 3000);
+  const formatTimer = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const advanceBlock = (nextIndex: number) => {
+    setGameTimer(300); // Reset 5 mins
+    setGameIndex(nextIndex);
+  };
+
+  const handleColorClick = (isIntruder: boolean) => {
+    if (isIntruder) {
+      const newScore = scores.logic + 1;
+      setScores(s => ({ ...s, logic: newScore }));
+      generateColorGame(newScore); // Level goes up with score!
+    } else {
+      // Small penalty or just new game without point? Just new game.
+      generateColorGame(scores.logic); 
+    }
+  };
+
+  const handleMathClick = (ans: number) => {
+    if (ans === mathGame.correct) {
+      const newScore = scores.math + 1;
+      setScores(s => ({ ...s, math: newScore }));
+      generateMathGame(newScore);
+    } else {
+      generateMathGame(scores.math);
+    }
+  };
+
+  const handleBehClick = () => {
+    setScores(s => ({ ...s, behavior: s.behavior + 1 }));
+    setBehIdx((prev) => (prev + 1) % BEHAVIOR_SITS.length);
   };
 
   // ========================================================
@@ -193,7 +225,7 @@ export default function ProfilePage() {
         setLevel('Terminale');
         setInterests(['Informatique', 'Sciences', 'Jeux Vidéo']);
         setStrengths([
-          { name: 'Logique Spatiale', val: 85 },
+          { name: 'Logique Visuelle', val: 85 },
           { name: 'Créativité', val: 65 },
           { name: 'Réactivité', val: 90 },
           { name: 'Travail en équipe', val: 75 }
@@ -218,7 +250,7 @@ export default function ProfilePage() {
     } else if (questionIndex === 1) {
       setQuestionIndex(2);
       setTimeout(() => {
-        setChatMessages(prev => [...prev, { role: 'ori', content: "C'est noté. Je compile les résultats de tes bulletins, de tes mini-jeux cognitifs, et de nos échanges..." }]);
+        setChatMessages(prev => [...prev, { role: 'ori', content: "C'est noté. Je compile les résultats de tes bulletins, de tes tests cognitifs, et de nos échanges..." }]);
         setTimeout(() => setStep(4), 2000);
       }, 1000);
     }
@@ -267,7 +299,7 @@ export default function ProfilePage() {
               <Sparkles className="h-7 w-7 text-orange-600" />
             </div>
             <h1 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">Générateur de Persona</h1>
-            <p className="text-lg text-slate-500 font-medium">L'IA ORI analyse ton dossier et tes aptitudes via des mini-jeux pour créer ton profil.</p>
+            <p className="text-lg text-slate-500 font-medium">L'IA ORI analyse ton dossier et tes aptitudes via des tests cognitifs pour créer ton profil.</p>
           </header>
         )}
 
@@ -344,149 +376,187 @@ export default function ProfilePage() {
             </motion.div>
           )}
 
-          {/* STEP 2: MINI-GAMES */}
+          {/* STEP 2: MINI-GAMES ARCADE */}
           {step === 2 && (
             <motion.div 
               key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
               className="max-w-2xl mx-auto"
             >
-              {!gameLoading ? (
-                <div className="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden flex flex-col">
-                  
-                  {/* Global Header */}
-                  <div className="bg-slate-900 p-5 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center shadow-inner",
-                        gameIndex === 0 ? "bg-blue-500" : gameIndex === 1 ? "bg-pink-500" : "bg-orange-500"
-                      )}>
-                        {gameIndex === 0 && <Brain className="w-5 h-5 text-white" />}
-                        {gameIndex === 1 && <Palette className="w-5 h-5 text-white" />}
-                        {gameIndex === 2 && <Zap className="w-5 h-5 text-white" />}
+              <div className="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden flex flex-col">
+                
+                {/* Global Header (Only for Games, not Results) */}
+                {gameIndex < 3 && (
+                  <>
+                    <div className="bg-slate-900 p-5 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center shadow-inner",
+                          gameIndex === 0 ? "bg-blue-500" : gameIndex === 1 ? "bg-pink-500" : "bg-orange-500"
+                        )}>
+                          {gameIndex === 0 && <Palette className="w-5 h-5 text-white" />}
+                          {gameIndex === 1 && <Brain className="w-5 h-5 text-white" />}
+                          {gameIndex === 2 && <Zap className="w-5 h-5 text-white" />}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white">Tests Cognitifs</h3>
+                          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+                            {gameIndex === 0 && "Logique Visuelle"}
+                            {gameIndex === 1 && "Mathématiques"}
+                            {gameIndex === 2 && "Comportement"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border bg-white/10 border-white/20 text-white">
+                          <Timer className="w-4 h-4" />
+                          <span className="font-mono font-bold tracking-wider">{formatTimer(gameTimer)}</span>
+                        </div>
+                        {/* Demo Cheat Button */}
+                        <button onClick={() => advanceBlock(gameIndex + 1)} className="text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-xs" title="Passer au bloc suivant (Démo)">
+                          <FastForward className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="h-1 bg-slate-100">
+                      <motion.div 
+                        className="h-full bg-orange-500"
+                        initial={{ width: `${(gameIndex / 3) * 100}%` }}
+                        animate={{ width: `${((gameIndex + 1) / 3) * 100}%` }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Game 1: Colors */}
+                {gameIndex === 0 && (
+                  <div className="p-8 md:p-12 text-center relative">
+                    <div className="absolute top-4 right-6 text-sm font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full">Score: {scores.logic}</div>
+                    <h2 className="text-2xl font-black text-slate-900 mb-2">L'Œil de Lynx</h2>
+                    <p className="text-slate-500 mb-8 font-medium">Trouve le carré différent. La difficulté augmente !</p>
+                    
+                    <div 
+                      className="grid gap-2 w-72 h-72 mx-auto"
+                      style={{ gridTemplateColumns: `repeat(${colorGame.gridSize}, minmax(0, 1fr))` }}
+                    >
+                      {[...Array(colorGame.gridSize * colorGame.gridSize)].map((_, i) => (
+                        <div 
+                          key={i}
+                          onClick={() => handleColorClick(i === colorGame.intruderIndex)}
+                          className="rounded-xl cursor-pointer hover:scale-[1.02] active:scale-95 transition-transform shadow-sm w-full h-full"
+                          style={{ backgroundColor: i === colorGame.intruderIndex ? colorGame.intruderColor : colorGame.baseColor }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Game 2: Math */}
+                {gameIndex === 1 && (
+                  <div className="p-8 md:p-12 text-center relative">
+                    <div className="absolute top-4 right-6 text-sm font-bold text-pink-500 bg-pink-50 px-3 py-1 rounded-full">Score: {scores.math}</div>
+                    <h2 className="text-2xl font-black text-slate-900 mb-2">Calcul Express</h2>
+                    <p className="text-slate-500 mb-8 font-medium">Résous ces calculs. Le niveau augmente !</p>
+                    
+                    <div className="text-5xl font-black text-slate-800 flex items-center justify-center h-32 mb-8 bg-slate-50 rounded-2xl border border-slate-100 max-w-sm mx-auto shadow-inner tracking-widest">
+                      {mathGame.eq}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
+                      {mathGame.ans.map((ans, i) => (
+                        <button 
+                          key={i}
+                          onClick={() => handleMathClick(ans)}
+                          className="bg-white border-2 border-slate-200 text-2xl font-bold py-5 rounded-xl hover:border-pink-500 hover:text-pink-500 hover:bg-pink-50 active:scale-95 transition-all shadow-sm"
+                        >
+                          {ans}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Game 3: Behavior */}
+                {gameIndex === 2 && (
+                  <div className="p-8 md:p-12 text-center relative">
+                    <div className="absolute top-4 right-6 text-sm font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full">Score: {scores.behavior}</div>
+                    <h2 className="text-2xl font-black text-slate-900 mb-2">Mise en situation</h2>
+                    <p className="text-slate-500 mb-8 font-medium">Choisis l'action qui te correspond le plus au quotidien.</p>
+                    
+                    <div className="text-xl font-black text-slate-800 p-6 mb-8 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner">
+                      {BEHAVIOR_SITS[behIdx].sit}
+                    </div>
+
+                    <div className="space-y-4">
+                      {BEHAVIOR_SITS[behIdx].opts.map((opt, i) => (
+                        <button 
+                          key={i}
+                          onClick={() => handleBehClick()}
+                          className="w-full bg-white border-2 border-slate-200 text-lg font-bold py-5 px-6 rounded-xl hover:border-orange-500 hover:text-orange-500 hover:bg-orange-50 active:scale-95 transition-all text-left shadow-sm"
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Game 4: Results Screen */}
+                {gameIndex === 3 && (
+                  <div className="p-8 md:p-12">
+                    <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100">
+                      <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                        <BarChart3 className="w-7 h-7 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-white">Tests Cognitifs</h3>
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
-                          {gameIndex === 0 && "Mémoire Spatiale"}
-                          {gameIndex === 1 && "Œil de Lynx"}
-                          {gameIndex === 2 && "Réflexe Analytique"}
-                        </p>
+                        <h2 className="text-2xl font-black text-slate-900">Résultats des Tests</h2>
+                        <p className="text-slate-500 font-medium">Voici ton profil cognitif dominant.</p>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Progress Bar */}
-                  <div className="h-1 bg-slate-100">
-                    <motion.div 
-                      className="h-full bg-slate-800"
-                      initial={{ width: `${(gameIndex / 3) * 100}%` }}
-                      animate={{ width: `${((gameIndex + 1) / 3) * 100}%` }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </div>
+                    <div className="space-y-8 mb-10">
+                      {/* Logic Score */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-end">
+                          <span className="font-bold text-slate-700 flex items-center gap-2"><Palette className="w-4 h-4 text-blue-500" /> Logique Visuelle</span>
+                          <span className="text-sm font-black text-blue-600">{12 + scores.logic * 3} pts</span>
+                        </div>
+                        <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, 50 + scores.logic * 10)}%` }} transition={{ duration: 1 }} className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full" />
+                        </div>
+                      </div>
 
-                  {/* Game 1: Memory */}
-                  {gameIndex === 0 && (
-                    <div className="p-8 md:p-12 text-center">
-                      <h2 className="text-2xl font-black text-slate-900 mb-2">Retiens la séquence</h2>
-                      <p className="text-slate-500 mb-8 font-medium h-6">
-                        {memPhase === 'showing' ? "Mémorise les cases qui s'allument..." : memPhase === 'playing' ? "À toi de jouer !" : "Prépare-toi..."}
-                      </p>
-                      
-                      <div className="grid grid-cols-3 gap-3 w-64 h-64 mx-auto p-4 bg-slate-100 rounded-2xl border border-slate-200">
-                        {[0,1,2,3,4,5,6,7,8].map(i => (
-                          <div 
-                            key={i}
-                            onClick={() => handleMemClick(i)}
-                            className={cn(
-                              "rounded-xl transition-all duration-200 cursor-pointer shadow-sm",
-                              memActiveCell === i ? "bg-blue-500 scale-95 shadow-inner" : "bg-white hover:bg-slate-50",
-                              memError && memInput[memInput.length-1] === i ? "bg-red-500" : "",
-                              memSuccess ? "bg-green-500" : ""
-                            )}
-                          />
-                        ))}
+                      {/* Math Score */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-end">
+                          <span className="font-bold text-slate-700 flex items-center gap-2"><Brain className="w-4 h-4 text-pink-500" /> Mathématiques</span>
+                          <span className="text-sm font-black text-pink-600">{15 + scores.math * 2} pts</span>
+                        </div>
+                        <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, 60 + scores.math * 10)}%` }} transition={{ duration: 1, delay: 0.2 }} className="h-full bg-gradient-to-r from-pink-400 to-pink-500 rounded-full" />
+                        </div>
+                      </div>
+
+                      {/* Behavior Score */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-end">
+                          <span className="font-bold text-slate-700 flex items-center gap-2"><Zap className="w-4 h-4 text-orange-500" /> Soft Skills (Comportement)</span>
+                          <span className="text-sm font-black text-orange-600">{18 + scores.behavior * 2} pts</span>
+                        </div>
+                        <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, 70 + scores.behavior * 10)}%` }} transition={{ duration: 1, delay: 0.4 }} className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full" />
+                        </div>
                       </div>
                     </div>
-                  )}
 
-                  {/* Game 2: Colors */}
-                  {gameIndex === 1 && (
-                    <div className="p-8 md:p-12 text-center">
-                      <h2 className="text-2xl font-black text-slate-900 mb-2">Trouve l'intrus</h2>
-                      <p className="text-slate-500 mb-8 font-medium">Une seule de ces cases a une teinte très légèrement différente.</p>
-                      
-                      <div className="grid grid-cols-4 gap-2 w-72 h-72 mx-auto">
-                        {[...Array(16)].map((_, i) => (
-                          <div 
-                            key={i}
-                            onClick={() => handleColorClick()}
-                            className={cn(
-                              "rounded-xl cursor-pointer hover:scale-105 transition-transform shadow-sm",
-                              i === intruderIndex ? "bg-[#4a89fc]" : "bg-[#3b82f6]" // Subtle difference
-                            )}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Game 3: Math + Timer */}
-                  {gameIndex === 2 && (
-                    <div className="p-8 md:p-12 text-center">
-                      <h2 className="text-2xl font-black text-slate-900 mb-2">Calcul express</h2>
-                      <p className="text-slate-500 mb-8 font-medium">Résous cette équation avant la fin du temps !</p>
-                      
-                      {/* Timer Bar */}
-                      <div className="w-full max-w-sm mx-auto h-3 bg-slate-100 rounded-full mb-8 overflow-hidden relative">
-                        <div 
-                          className={cn("absolute top-0 left-0 h-full rounded-full transition-all duration-100", gameTimer < 1500 ? "bg-red-500" : "bg-orange-500")}
-                          style={{ width: `${(gameTimer / 5000) * 100}%` }}
-                        />
-                      </div>
-
-                      <div className="text-3xl font-black text-slate-800 space-y-4 mb-10 bg-slate-50 py-6 rounded-2xl border border-slate-100 max-w-sm mx-auto">
-                        <p>🍏 + 🍏 = 10</p>
-                        <p>🍏 + 🍌 = 8</p>
-                        <p className="text-orange-500">🍌 = ?</p>
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-4 max-w-sm mx-auto">
-                        {[2, 3, 4, 5].map((ans) => (
-                          <button 
-                            key={ans}
-                            onClick={() => finishGames()}
-                            className="bg-white border-2 border-slate-200 text-xl font-bold py-4 rounded-xl hover:border-orange-500 hover:text-orange-500 hover:bg-orange-50 active:scale-95 transition-all"
-                          >
-                            {ans}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                </div>
-              ) : (
-                /* Loading AI Consolidation */
-                <div className="bg-white rounded-3xl p-16 text-center shadow-2xl border border-slate-100 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-slate-100">
-                    <motion.div 
-                      className="h-full bg-gradient-to-r from-orange-400 to-orange-600"
-                      initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 3, ease: "easeInOut" }}
-                    />
+                    <Button onClick={() => setStep(3)} className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg font-black text-lg transition-transform active:scale-[0.98] flex items-center gap-2">
+                      Passer à l'analyse ORI <ChevronRight className="w-5 h-5" />
+                    </Button>
                   </div>
-                  
-                  <div className="relative w-32 h-32 mx-auto mb-8">
-                    <motion.div animate={{ rotate: -360 }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }} className="absolute inset-0 rounded-full border-[3px] border-dashed border-blue-200" />
-                    <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} className="absolute inset-2 bg-gradient-to-tr from-blue-100 to-white rounded-full shadow-inner flex items-center justify-center">
-                      <Activity className="w-12 h-12 text-blue-500" />
-                    </motion.div>
-                  </div>
-                  
-                  <h3 className="text-2xl font-black text-slate-900 mb-3">Croisement des données...</h3>
-                  <p className="text-slate-500 font-medium animate-pulse">L'IA fusionne tes scores cognitifs avec ton bulletin.</p>
-                </div>
-              )}
+                )}
+
+              </div>
             </motion.div>
           )}
 
