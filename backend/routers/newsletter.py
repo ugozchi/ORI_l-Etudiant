@@ -19,7 +19,7 @@ MOCK_ARTICLES = [
         "date": "2026-04-20",
         "url": "#",
         "type": "Témoignage",
-        "image_url": "https://images.unsplash.com/photo-1576091160550-2173ff9e5fe3?w=500&auto=format&fit=crop"
+        "image_url": "https://images.unsplash.com/photo-1576091160399-11cb8e25fcaf?q=80&w=800&auto=format&fit=crop"
     },
     {
         "id": "a_2",
@@ -29,7 +29,7 @@ MOCK_ARTICLES = [
         "date": "2026-04-25",
         "url": "#",
         "type": "Article",
-        "image_url": "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=500&auto=format&fit=crop"
+        "image_url": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=800&auto=format&fit=crop"
     },
     {
         "id": "a_3",
@@ -39,7 +39,7 @@ MOCK_ARTICLES = [
         "date": "2026-04-22",
         "url": "#",
         "type": "Vidéo",
-        "image_url": "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=500&auto=format&fit=crop"
+        "image_url": "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=800&auto=format&fit=crop"
     },
     {
         "id": "a_4",
@@ -49,7 +49,7 @@ MOCK_ARTICLES = [
         "date": "2026-04-18",
         "url": "#",
         "type": "Article",
-        "image_url": "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=500&auto=format&fit=crop"
+        "image_url": "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=800&auto=format&fit=crop"
     },
     {
         "id": "a_5",
@@ -59,7 +59,7 @@ MOCK_ARTICLES = [
         "date": "2026-03-10",
         "url": "#",
         "type": "Guide",
-        "image_url": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=500&auto=format&fit=crop"
+        "image_url": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=800&auto=format&fit=crop"
     },
     {
         "id": "a_6",
@@ -69,7 +69,7 @@ MOCK_ARTICLES = [
         "date": "2026-04-21",
         "url": "#",
         "type": "Article",
-        "image_url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=500&auto=format&fit=crop"
+        "image_url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=800&auto=format&fit=crop"
     }
 ]
 
