@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MessageCircle, User, Users, Newspaper, FileText, Compass, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MessageCircle, User, Users, Newspaper, FileText, Compass, ChevronLeft, ChevronRight, Route } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
   { name: 'Chat', href: '/chat', icon: MessageCircle },
+  { name: 'Parcours', href: '/parcours', icon: Route },
   { name: 'Salons', href: '/salons', icon: Users },
   { name: 'Newsletter', href: '/newsletter', icon: Newspaper },
   { name: 'Docs', href: '/docs', icon: FileText },
