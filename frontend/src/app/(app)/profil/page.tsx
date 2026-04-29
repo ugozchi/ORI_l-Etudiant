@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { User, MapPin, GraduationCap, Sparkles, UploadCloud, ChevronRight, Loader2, FileText, CheckCircle2, Target, BrainCircuit, Rocket, Activity, Send, Timer, HelpCircle } from 'lucide-react';
+import { User, MapPin, GraduationCap, Sparkles, UploadCloud, ChevronRight, Loader2, FileText, CheckCircle2, Target, BrainCircuit, Rocket, Activity, Send, Timer, Brain, Palette, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/utils/supabase/client';
@@ -14,39 +14,6 @@ const INTERESTS_LIST = [
 ];
 
 const LEVELS = ["Seconde", "Première", "Terminale", "Bac+1", "Bac+2", "Bac+3"];
-
-const QUIZ_QUESTIONS = [
-  {
-    type: "Logique Analytique",
-    question: "Si tu devais analyser les résultats trimestriels d'une startup, par quoi commencerais-tu ?",
-    options: [
-      "Créer un graphique pour visualiser les données",
-      "Calculer la rentabilité mois par mois",
-      "Comprendre d'où viennent les clients",
-      "Vérifier qu'il n'y a pas d'erreur dans les chiffres"
-    ]
-  },
-  {
-    type: "Soft Skills & Leadership",
-    question: "Ton équipe de projet étudiant prend beaucoup de retard. Quelle est ta première réaction ?",
-    options: [
-      "Je redéfinis les priorités et redistribue les tâches.",
-      "Je travaille deux fois plus pour compenser le retard.",
-      "J'organise un point rapide pour comprendre les blocages.",
-      "Je préviens le responsable du retard probable."
-    ]
-  },
-  {
-    type: "Affinités Métiers",
-    question: "Tu as une journée entière totalement libre, que préfères-tu faire ?",
-    options: [
-      "Résoudre une énigme ou un défi logique complexe.",
-      "Imaginer et dessiner le concept d'une nouvelle application.",
-      "Lire des articles sur les dernières avancées technologiques.",
-      "Débattre avec tes amis pour convaincre sur tes idées."
-    ]
-  }
-];
 
 export default function ProfilePage() {
   const [step, setStep] = useState(1);
@@ -62,23 +29,36 @@ export default function ProfilePage() {
   const [interests, setInterests] = useState<string[]>([]);
   const [strengths, setStrengths] = useState([{ name: 'Rigueur', val: 70 }, { name: 'Créativité', val: 50 }, { name: 'Logique', val: 80 }]);
   
-  // Quiz state
-  const [quizIndex, setQuizIndex] = useState(0);
-  const [quizTimer, setQuizTimer] = useState(900); // 15 mins
-  const [quizLoading, setQuizLoading] = useState(false);
+  // Games state
+  const [gameIndex, setGameIndex] = useState(0);
+  const [gameLoading, setGameLoading] = useState(false);
+  
+  // Game 1 (Memory)
+  const [memSequence, setMemSequence] = useState<number[]>([]);
+  const [memInput, setMemInput] = useState<number[]>([]);
+  const [memPhase, setMemPhase] = useState<'idle' | 'showing' | 'playing'>('idle');
+  const [memActiveCell, setMemActiveCell] = useState<number | null>(null);
+  const [memError, setMemError] = useState(false);
+  const [memSuccess, setMemSuccess] = useState(false);
+
+  // Game 2 (Colors)
+  const [intruderIndex] = useState(Math.floor(Math.random() * 16));
+
+  // Game 3 (Math Timer)
+  const [gameTimer, setGameTimer] = useState(5000); // 5000ms
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<{role: 'ori'|'user', content: string}[]>([
-    { role: 'ori', content: "Superbes résultats au test ! Pour affiner ton profil, quel est ton métier ou domaine de rêve aujourd'hui ?" }
+    { role: 'ori', content: "Impressionnant ! Tes réflexes et ta logique visuelle sont excellents. Pour affiner, quel est ton domaine de rêve aujourd'hui ?" }
   ]);
   const [chatInput, setChatInput] = useState('');
   const [questionIndex, setQuestionIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const supabase = createClient();
 
+  // Load Profile
   useEffect(() => {
     const fetchProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -96,7 +76,7 @@ export default function ProfilePage() {
               setCity(p.city);
               setLevel(p.level);
               setInterests(p.interests || []);
-              setStep(5); // Go to Persona Dashboard directly if profile exists
+              setStep(5);
             }
           }
         }
@@ -109,23 +89,89 @@ export default function ProfilePage() {
     fetchProfile();
   }, [supabase]);
 
-  // Quiz timer
-  useEffect(() => {
-    if (step === 2 && !quizLoading) {
-      const interval = setInterval(() => {
-        setQuizTimer(prev => prev > 0 ? prev - 1 : 0);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [step, quizLoading]);
+  // GAME LOGIC ============================================
 
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  // Game 1: Memory sequence engine
+  useEffect(() => {
+    if (step === 2 && gameIndex === 0 && memPhase === 'idle') {
+      const seq = [
+        Math.floor(Math.random()*9), 
+        Math.floor(Math.random()*9), 
+        Math.floor(Math.random()*9),
+        Math.floor(Math.random()*9)
+      ];
+      setMemSequence(seq);
+      setMemPhase('showing');
+      
+      let stepIdx = 0;
+      setTimeout(() => { // wait a bit before starting
+        const interval = setInterval(() => {
+          if (stepIdx < seq.length) {
+            setMemActiveCell(seq[stepIdx]);
+            setTimeout(() => setMemActiveCell(null), 300);
+            stepIdx++;
+          } else {
+            clearInterval(interval);
+            setMemPhase('playing');
+          }
+        }, 700);
+      }, 500);
+    }
+  }, [step, gameIndex, memPhase]);
+
+  const handleMemClick = (idx: number) => {
+    if (memPhase !== 'playing' || memError || memSuccess) return;
+    
+    setMemActiveCell(idx);
+    setTimeout(() => setMemActiveCell(null), 200);
+
+    const newInp = [...memInput, idx];
+    setMemInput(newInp);
+    
+    if (newInp[newInp.length - 1] !== memSequence[newInp.length - 1]) {
+      setMemError(true);
+      setTimeout(() => setGameIndex(1), 800);
+      return;
+    }
+    
+    if (newInp.length === memSequence.length) {
+      setMemSuccess(true);
+      setTimeout(() => setGameIndex(1), 800);
+    }
   };
 
-  // Auto-scroll chat
+  // Game 2: Colors
+  const handleColorClick = () => {
+    setGameIndex(2);
+  };
+
+  // Game 3: Timer
+  useEffect(() => {
+    if (step === 2 && gameIndex === 2 && gameTimer > 0 && !gameLoading) {
+      const interval = setInterval(() => {
+        setGameTimer(prev => {
+          if (prev <= 50) {
+            clearInterval(interval);
+            finishGames();
+            return 0;
+          }
+          return prev - 50;
+        });
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [step, gameIndex, gameTimer, gameLoading]);
+
+  const finishGames = () => {
+    setGameLoading(true);
+    setTimeout(() => {
+      setGameLoading(false);
+      setStep(3);
+    }, 3000);
+  };
+
+  // ========================================================
+
   useEffect(() => {
     if (step === 3) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -140,35 +186,20 @@ export default function ProfilePage() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setAnalyzing(true);
-      
-      // Simulate AI extraction delay
       setTimeout(() => {
         setAnalyzing(false);
-        // Mock extracted data
         setName('Alex');
         setCity('Paris');
         setLevel('Terminale');
         setInterests(['Informatique', 'Sciences', 'Jeux Vidéo']);
         setStrengths([
-          { name: 'Logique Mathématique', val: 85 },
+          { name: 'Logique Spatiale', val: 85 },
           { name: 'Créativité', val: 65 },
-          { name: 'Rigueur', val: 90 },
+          { name: 'Réactivité', val: 90 },
           { name: 'Travail en équipe', val: 75 }
         ]);
-        setStep(2); // Go to Quiz step
+        setStep(2); // Start Games!
       }, 3500);
-    }
-  };
-
-  const handleQuizAnswer = (optionIndex: number) => {
-    if (quizIndex < QUIZ_QUESTIONS.length - 1) {
-      setQuizIndex(prev => prev + 1);
-    } else {
-      setQuizLoading(true);
-      setTimeout(() => {
-        setQuizLoading(false);
-        setStep(3); // Go to Chat
-      }, 3000);
     }
   };
 
@@ -176,24 +207,19 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
-    // Add user message
     setChatMessages(prev => [...prev, { role: 'user', content: chatInput }]);
     setChatInput('');
 
     if (questionIndex === 0) {
       setQuestionIndex(1);
-      // Simulate ORI thinking
       setTimeout(() => {
-        setChatMessages(prev => [...prev, { role: 'ori', content: "C'est un beau projet ! Y a-t-il une matière ou une tâche que tu détestes faire au quotidien ?" }]);
+        setChatMessages(prev => [...prev, { role: 'ori', content: "C'est un beau projet ! Et y a-t-il une tâche précise que tu détestes faire au quotidien ?" }]);
       }, 1000);
     } else if (questionIndex === 1) {
       setQuestionIndex(2);
-      // Simulate ORI finishing up
       setTimeout(() => {
-        setChatMessages(prev => [...prev, { role: 'ori', content: "C'est noté. Je compile les résultats de tes bulletins, de ton test de compétences, et de nos échanges..." }]);
-        setTimeout(() => {
-          setStep(4); // Go to Verification
-        }, 2000);
+        setChatMessages(prev => [...prev, { role: 'ori', content: "C'est noté. Je compile les résultats de tes bulletins, de tes mini-jeux cognitifs, et de nos échanges..." }]);
+        setTimeout(() => setStep(4), 2000);
       }, 1000);
     }
   };
@@ -210,7 +236,6 @@ export default function ProfilePage() {
         strengths: strengths.map(s => s.name),
         mobility: true
       };
-
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -232,23 +257,20 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-full bg-slate-50 p-6 lg:p-12 overflow-y-auto relative">
-      {/* Background Glows */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-400/5 blur-[120px] rounded-full pointer-events-none -translate-y-1/3 translate-x-1/3" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none translate-y-1/3 -translate-x-1/3" />
 
       <div className="max-w-4xl mx-auto space-y-8 relative z-10">
-        
         {step < 5 && (
           <header className="mb-10 text-center">
             <div className="inline-flex h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-100 to-orange-50 items-center justify-center mb-6 shadow-sm border border-orange-200">
               <Sparkles className="h-7 w-7 text-orange-600" />
             </div>
             <h1 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">Générateur de Persona</h1>
-            <p className="text-lg text-slate-500 font-medium">L'IA ORI analyse ton dossier et tes compétences pour créer ton profil sur-mesure.</p>
+            <p className="text-lg text-slate-500 font-medium">L'IA ORI analyse ton dossier et tes aptitudes via des mini-jeux pour créer ton profil.</p>
           </header>
         )}
 
-        {/* Stepper Indicator */}
         {step < 5 && (
           <div className="flex justify-center mb-8">
             <div className="flex items-center gap-2">
@@ -278,7 +300,6 @@ export default function ProfilePage() {
             >
               {!analyzing ? (
                 <div className="space-y-6">
-                  {/* Dropzone */}
                   <div 
                     onClick={() => fileInputRef.current?.click()}
                     className="relative group cursor-pointer bg-white border-2 border-dashed border-slate-300 hover:border-orange-500 rounded-3xl p-12 text-center transition-all hover:bg-orange-50/50 shadow-sm hover:shadow-xl"
@@ -306,94 +327,144 @@ export default function ProfilePage() {
                   </Button>
                 </div>
               ) : (
-                /* Loading AI Scan */
                 <div className="bg-white rounded-3xl p-16 text-center shadow-2xl border border-slate-100 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-full h-1 bg-slate-100">
-                    <motion.div 
-                      className="h-full bg-gradient-to-r from-orange-400 to-orange-600"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 3.5, ease: "easeInOut" }}
-                    />
+                    <motion.div className="h-full bg-gradient-to-r from-orange-400 to-orange-600" initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 3.5, ease: "easeInOut" }} />
                   </div>
-                  
                   <div className="relative w-32 h-32 mx-auto mb-8">
-                    <motion.div 
-                      animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-0 rounded-full border-[3px] border-dashed border-orange-200"
-                    />
-                    <motion.div 
-                      animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute inset-2 bg-gradient-to-tr from-orange-100 to-white rounded-full shadow-inner flex items-center justify-center"
-                    >
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }} className="absolute inset-0 rounded-full border-[3px] border-dashed border-orange-200" />
+                    <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} className="absolute inset-2 bg-gradient-to-tr from-orange-100 to-white rounded-full shadow-inner flex items-center justify-center">
                       <BrainCircuit className="w-12 h-12 text-orange-500" />
                     </motion.div>
                   </div>
-                  
                   <h3 className="text-2xl font-black text-slate-900 mb-3">Analyse IA en cours...</h3>
-                  <p className="text-slate-500 font-medium animate-pulse">Extraction de tes compétences et points forts depuis le document.</p>
+                  <p className="text-slate-500 font-medium animate-pulse">Extraction de tes compétences depuis le document.</p>
                 </div>
               )}
             </motion.div>
           )}
 
-          {/* STEP 2: LOGIC QUIZ */}
+          {/* STEP 2: MINI-GAMES */}
           {step === 2 && (
             <motion.div 
               key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
               className="max-w-2xl mx-auto"
             >
-              {!quizLoading ? (
+              {!gameLoading ? (
                 <div className="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden flex flex-col">
-                  {/* Quiz Header & Timer */}
+                  
+                  {/* Global Header */}
                   <div className="bg-slate-900 p-5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center shadow-inner">
-                        <HelpCircle className="w-5 h-5 text-white" />
+                      <div className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center shadow-inner",
+                        gameIndex === 0 ? "bg-blue-500" : gameIndex === 1 ? "bg-pink-500" : "bg-orange-500"
+                      )}>
+                        {gameIndex === 0 && <Brain className="w-5 h-5 text-white" />}
+                        {gameIndex === 1 && <Palette className="w-5 h-5 text-white" />}
+                        {gameIndex === 2 && <Zap className="w-5 h-5 text-white" />}
                       </div>
                       <div>
-                        <h3 className="font-bold text-white">Test d'Évaluation</h3>
-                        <p className="text-orange-300 text-xs font-bold uppercase tracking-widest">{QUIZ_QUESTIONS[quizIndex].type}</p>
+                        <h3 className="font-bold text-white">Tests Cognitifs</h3>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+                          {gameIndex === 0 && "Mémoire Spatiale"}
+                          {gameIndex === 1 && "Œil de Lynx"}
+                          {gameIndex === 2 && "Réflexe Analytique"}
+                        </p>
                       </div>
-                    </div>
-                    <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-lg border", quizTimer < 300 ? "bg-red-500/20 border-red-500/50 text-red-400" : "bg-white/10 border-white/20 text-white")}>
-                      <Timer className="w-4 h-4" />
-                      <span className="font-mono font-bold tracking-wider">{formatTime(quizTimer)}</span>
                     </div>
                   </div>
 
-                  {/* Quiz Progress */}
+                  {/* Progress Bar */}
                   <div className="h-1 bg-slate-100">
                     <motion.div 
-                      className="h-full bg-orange-500"
-                      initial={{ width: `${(quizIndex / QUIZ_QUESTIONS.length) * 100}%` }}
-                      animate={{ width: `${((quizIndex + 1) / QUIZ_QUESTIONS.length) * 100}%` }}
+                      className="h-full bg-slate-800"
+                      initial={{ width: `${(gameIndex / 3) * 100}%` }}
+                      animate={{ width: `${((gameIndex + 1) / 3) * 100}%` }}
                       transition={{ duration: 0.3 }}
                     />
                   </div>
 
-                  {/* Question Area */}
-                  <div className="p-8">
-                    <h2 className="text-2xl font-black text-slate-900 mb-8 leading-tight">
-                      {QUIZ_QUESTIONS[quizIndex].question}
-                    </h2>
-                    
-                    <div className="space-y-4">
-                      {QUIZ_QUESTIONS[quizIndex].options.map((opt, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleQuizAnswer(i)}
-                          className="w-full text-left p-5 rounded-2xl border-2 border-slate-100 hover:border-orange-500 hover:bg-orange-50/50 transition-all font-medium text-slate-700 active:scale-[0.98] focus:outline-none"
-                        >
-                          {opt}
-                        </button>
-                      ))}
+                  {/* Game 1: Memory */}
+                  {gameIndex === 0 && (
+                    <div className="p-8 md:p-12 text-center">
+                      <h2 className="text-2xl font-black text-slate-900 mb-2">Retiens la séquence</h2>
+                      <p className="text-slate-500 mb-8 font-medium h-6">
+                        {memPhase === 'showing' ? "Mémorise les cases qui s'allument..." : memPhase === 'playing' ? "À toi de jouer !" : "Prépare-toi..."}
+                      </p>
+                      
+                      <div className="grid grid-cols-3 gap-3 w-64 h-64 mx-auto p-4 bg-slate-100 rounded-2xl border border-slate-200">
+                        {[0,1,2,3,4,5,6,7,8].map(i => (
+                          <div 
+                            key={i}
+                            onClick={() => handleMemClick(i)}
+                            className={cn(
+                              "rounded-xl transition-all duration-200 cursor-pointer shadow-sm",
+                              memActiveCell === i ? "bg-blue-500 scale-95 shadow-inner" : "bg-white hover:bg-slate-50",
+                              memError && memInput[memInput.length-1] === i ? "bg-red-500" : "",
+                              memSuccess ? "bg-green-500" : ""
+                            )}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="p-5 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-                    <span className="text-sm font-bold text-slate-400">Question {quizIndex + 1} sur {QUIZ_QUESTIONS.length}</span>
-                  </div>
+                  )}
+
+                  {/* Game 2: Colors */}
+                  {gameIndex === 1 && (
+                    <div className="p-8 md:p-12 text-center">
+                      <h2 className="text-2xl font-black text-slate-900 mb-2">Trouve l'intrus</h2>
+                      <p className="text-slate-500 mb-8 font-medium">Une seule de ces cases a une teinte très légèrement différente.</p>
+                      
+                      <div className="grid grid-cols-4 gap-2 w-72 h-72 mx-auto">
+                        {[...Array(16)].map((_, i) => (
+                          <div 
+                            key={i}
+                            onClick={() => handleColorClick()}
+                            className={cn(
+                              "rounded-xl cursor-pointer hover:scale-105 transition-transform shadow-sm",
+                              i === intruderIndex ? "bg-[#4a89fc]" : "bg-[#3b82f6]" // Subtle difference
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Game 3: Math + Timer */}
+                  {gameIndex === 2 && (
+                    <div className="p-8 md:p-12 text-center">
+                      <h2 className="text-2xl font-black text-slate-900 mb-2">Calcul express</h2>
+                      <p className="text-slate-500 mb-8 font-medium">Résous cette équation avant la fin du temps !</p>
+                      
+                      {/* Timer Bar */}
+                      <div className="w-full max-w-sm mx-auto h-3 bg-slate-100 rounded-full mb-8 overflow-hidden relative">
+                        <div 
+                          className={cn("absolute top-0 left-0 h-full rounded-full transition-all duration-100", gameTimer < 1500 ? "bg-red-500" : "bg-orange-500")}
+                          style={{ width: `${(gameTimer / 5000) * 100}%` }}
+                        />
+                      </div>
+
+                      <div className="text-3xl font-black text-slate-800 space-y-4 mb-10 bg-slate-50 py-6 rounded-2xl border border-slate-100 max-w-sm mx-auto">
+                        <p>🍏 + 🍏 = 10</p>
+                        <p>🍏 + 🍌 = 8</p>
+                        <p className="text-orange-500">🍌 = ?</p>
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-4 max-w-sm mx-auto">
+                        {[2, 3, 4, 5].map((ans) => (
+                          <button 
+                            key={ans}
+                            onClick={() => finishGames()}
+                            className="bg-white border-2 border-slate-200 text-xl font-bold py-4 rounded-xl hover:border-orange-500 hover:text-orange-500 hover:bg-orange-50 active:scale-95 transition-all"
+                          >
+                            {ans}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               ) : (
                 /* Loading AI Consolidation */
@@ -401,27 +472,19 @@ export default function ProfilePage() {
                   <div className="absolute top-0 left-0 w-full h-1 bg-slate-100">
                     <motion.div 
                       className="h-full bg-gradient-to-r from-orange-400 to-orange-600"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 3, ease: "easeInOut" }}
+                      initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 3, ease: "easeInOut" }}
                     />
                   </div>
                   
                   <div className="relative w-32 h-32 mx-auto mb-8">
-                    <motion.div 
-                      animate={{ rotate: -360 }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-0 rounded-full border-[3px] border-dashed border-blue-200"
-                    />
-                    <motion.div 
-                      animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute inset-2 bg-gradient-to-tr from-blue-100 to-white rounded-full shadow-inner flex items-center justify-center"
-                    >
+                    <motion.div animate={{ rotate: -360 }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }} className="absolute inset-0 rounded-full border-[3px] border-dashed border-blue-200" />
+                    <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} className="absolute inset-2 bg-gradient-to-tr from-blue-100 to-white rounded-full shadow-inner flex items-center justify-center">
                       <Activity className="w-12 h-12 text-blue-500" />
                     </motion.div>
                   </div>
                   
                   <h3 className="text-2xl font-black text-slate-900 mb-3">Croisement des données...</h3>
-                  <p className="text-slate-500 font-medium animate-pulse">Fusion des résultats du test avec tes bulletins.</p>
+                  <p className="text-slate-500 font-medium animate-pulse">L'IA fusionne tes scores cognitifs avec ton bulletin.</p>
                 </div>
               )}
             </motion.div>
