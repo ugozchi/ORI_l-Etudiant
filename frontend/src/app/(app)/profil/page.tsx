@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { User, MapPin, GraduationCap, Sparkles, UploadCloud, ChevronRight, Loader2, FileText, CheckCircle2, Target, BrainCircuit, Rocket, Activity, Send } from 'lucide-react';
+import { User, MapPin, GraduationCap, Sparkles, UploadCloud, ChevronRight, Loader2, FileText, CheckCircle2, Target, BrainCircuit, Rocket, Activity, Send, Timer, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/utils/supabase/client';
@@ -14,6 +14,39 @@ const INTERESTS_LIST = [
 ];
 
 const LEVELS = ["Seconde", "Première", "Terminale", "Bac+1", "Bac+2", "Bac+3"];
+
+const QUIZ_QUESTIONS = [
+  {
+    type: "Logique Analytique",
+    question: "Si tu devais analyser les résultats trimestriels d'une startup, par quoi commencerais-tu ?",
+    options: [
+      "Créer un graphique pour visualiser les données",
+      "Calculer la rentabilité mois par mois",
+      "Comprendre d'où viennent les clients",
+      "Vérifier qu'il n'y a pas d'erreur dans les chiffres"
+    ]
+  },
+  {
+    type: "Soft Skills & Leadership",
+    question: "Ton équipe de projet étudiant prend beaucoup de retard. Quelle est ta première réaction ?",
+    options: [
+      "Je redéfinis les priorités et redistribue les tâches.",
+      "Je travaille deux fois plus pour compenser le retard.",
+      "J'organise un point rapide pour comprendre les blocages.",
+      "Je préviens le responsable du retard probable."
+    ]
+  },
+  {
+    type: "Affinités Métiers",
+    question: "Tu as une journée entière totalement libre, que préfères-tu faire ?",
+    options: [
+      "Résoudre une énigme ou un défi logique complexe.",
+      "Imaginer et dessiner le concept d'une nouvelle application.",
+      "Lire des articles sur les dernières avancées technologiques.",
+      "Débattre avec tes amis pour convaincre sur tes idées."
+    ]
+  }
+];
 
 export default function ProfilePage() {
   const [step, setStep] = useState(1);
@@ -29,9 +62,14 @@ export default function ProfilePage() {
   const [interests, setInterests] = useState<string[]>([]);
   const [strengths, setStrengths] = useState([{ name: 'Rigueur', val: 70 }, { name: 'Créativité', val: 50 }, { name: 'Logique', val: 80 }]);
   
+  // Quiz state
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [quizTimer, setQuizTimer] = useState(900); // 15 mins
+  const [quizLoading, setQuizLoading] = useState(false);
+
   // Chat state
   const [chatMessages, setChatMessages] = useState<{role: 'ori'|'user', content: string}[]>([
-    { role: 'ori', content: "Salut ! J'ai bien analysé ton document. Pour affiner ton profil, quel est ton métier ou domaine de rêve ?" }
+    { role: 'ori', content: "Superbes résultats au test ! Pour affiner ton profil, quel est ton métier ou domaine de rêve aujourd'hui ?" }
   ]);
   const [chatInput, setChatInput] = useState('');
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -58,7 +96,7 @@ export default function ProfilePage() {
               setCity(p.city);
               setLevel(p.level);
               setInterests(p.interests || []);
-              setStep(4); // Go to Persona Dashboard directly if profile exists
+              setStep(5); // Go to Persona Dashboard directly if profile exists
             }
           }
         }
@@ -71,10 +109,28 @@ export default function ProfilePage() {
     fetchProfile();
   }, [supabase]);
 
+  // Quiz timer
+  useEffect(() => {
+    if (step === 2 && !quizLoading) {
+      const interval = setInterval(() => {
+        setQuizTimer(prev => prev > 0 ? prev - 1 : 0);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [step, quizLoading]);
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
   // Auto-scroll chat
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
+    if (step === 3) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages, step]);
 
   const toggleInterest = (interest: string) => {
     if (interests.includes(interest)) setInterests(prev => prev.filter(i => i !== interest));
@@ -99,8 +155,20 @@ export default function ProfilePage() {
           { name: 'Rigueur', val: 90 },
           { name: 'Travail en équipe', val: 75 }
         ]);
-        setStep(2); // Go to Chat step
+        setStep(2); // Go to Quiz step
       }, 3500);
+    }
+  };
+
+  const handleQuizAnswer = (optionIndex: number) => {
+    if (quizIndex < QUIZ_QUESTIONS.length - 1) {
+      setQuizIndex(prev => prev + 1);
+    } else {
+      setQuizLoading(true);
+      setTimeout(() => {
+        setQuizLoading(false);
+        setStep(3); // Go to Chat
+      }, 3000);
     }
   };
 
@@ -116,16 +184,16 @@ export default function ProfilePage() {
       setQuestionIndex(1);
       // Simulate ORI thinking
       setTimeout(() => {
-        setChatMessages(prev => [...prev, { role: 'ori', content: "Super intéressant ! Et y a-t-il une matière ou une tâche que tu détestes faire ?" }]);
+        setChatMessages(prev => [...prev, { role: 'ori', content: "C'est un beau projet ! Y a-t-il une matière ou une tâche que tu détestes faire au quotidien ?" }]);
       }, 1000);
     } else if (questionIndex === 1) {
       setQuestionIndex(2);
       // Simulate ORI finishing up
       setTimeout(() => {
-        setChatMessages(prev => [...prev, { role: 'ori', content: "C'est noté. Je génère ton Persona..." }]);
+        setChatMessages(prev => [...prev, { role: 'ori', content: "C'est noté. Je compile les résultats de tes bulletins, de ton test de compétences, et de nos échanges..." }]);
         setTimeout(() => {
-          setStep(3); // Go to Verification
-        }, 1500);
+          setStep(4); // Go to Verification
+        }, 2000);
       }, 1000);
     }
   };
@@ -148,7 +216,7 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      setStep(4);
+      setStep(5);
     } catch (err) {
       console.error(err);
     } finally {
@@ -170,21 +238,21 @@ export default function ProfilePage() {
 
       <div className="max-w-4xl mx-auto space-y-8 relative z-10">
         
-        {step < 4 && (
+        {step < 5 && (
           <header className="mb-10 text-center">
             <div className="inline-flex h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-100 to-orange-50 items-center justify-center mb-6 shadow-sm border border-orange-200">
               <Sparkles className="h-7 w-7 text-orange-600" />
             </div>
             <h1 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">Générateur de Persona</h1>
-            <p className="text-lg text-slate-500 font-medium">Laisse ORI analyser tes bulletins pour créer ton profil sur-mesure.</p>
+            <p className="text-lg text-slate-500 font-medium">L'IA ORI analyse ton dossier et tes compétences pour créer ton profil sur-mesure.</p>
           </header>
         )}
 
         {/* Stepper Indicator */}
-        {step < 4 && (
+        {step < 5 && (
           <div className="flex justify-center mb-8">
             <div className="flex items-center gap-2">
-              {[1, 2, 3].map((num) => (
+              {[1, 2, 3, 4].map((num) => (
                 <div key={num} className="flex items-center">
                   <div className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all",
@@ -193,7 +261,7 @@ export default function ProfilePage() {
                   )}>
                     {step > num ? <CheckCircle2 className="w-4 h-4" /> : num}
                   </div>
-                  {num < 3 && <div className={cn("w-10 h-1 rounded-full mx-2", step > num ? "bg-orange-200" : "bg-slate-200")} />}
+                  {num < 4 && <div className={cn("w-10 h-1 rounded-full mx-2", step > num ? "bg-orange-200" : "bg-slate-200")} />}
                 </div>
               ))}
             </div>
@@ -233,8 +301,8 @@ export default function ProfilePage() {
                     <div className="flex-grow border-t border-slate-200"></div>
                   </div>
 
-                  <Button variant="outline" onClick={() => setStep(3)} className="w-full h-14 rounded-2xl border-slate-200 text-slate-600 font-bold hover:bg-white hover:border-slate-300 shadow-sm">
-                    Remplir manuellement
+                  <Button variant="outline" onClick={() => setStep(4)} className="w-full h-14 rounded-2xl border-slate-200 text-slate-600 font-bold hover:bg-white hover:border-slate-300 shadow-sm">
+                    Remplir manuellement sans documents
                   </Button>
                 </div>
               ) : (
@@ -269,10 +337,100 @@ export default function ProfilePage() {
             </motion.div>
           )}
 
-          {/* STEP 2: MINI-CHAT ORI */}
+          {/* STEP 2: LOGIC QUIZ */}
           {step === 2 && (
             <motion.div 
               key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+              className="max-w-2xl mx-auto"
+            >
+              {!quizLoading ? (
+                <div className="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden flex flex-col">
+                  {/* Quiz Header & Timer */}
+                  <div className="bg-slate-900 p-5 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center shadow-inner">
+                        <HelpCircle className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white">Test d'Évaluation</h3>
+                        <p className="text-orange-300 text-xs font-bold uppercase tracking-widest">{QUIZ_QUESTIONS[quizIndex].type}</p>
+                      </div>
+                    </div>
+                    <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-lg border", quizTimer < 300 ? "bg-red-500/20 border-red-500/50 text-red-400" : "bg-white/10 border-white/20 text-white")}>
+                      <Timer className="w-4 h-4" />
+                      <span className="font-mono font-bold tracking-wider">{formatTime(quizTimer)}</span>
+                    </div>
+                  </div>
+
+                  {/* Quiz Progress */}
+                  <div className="h-1 bg-slate-100">
+                    <motion.div 
+                      className="h-full bg-orange-500"
+                      initial={{ width: `${(quizIndex / QUIZ_QUESTIONS.length) * 100}%` }}
+                      animate={{ width: `${((quizIndex + 1) / QUIZ_QUESTIONS.length) * 100}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+
+                  {/* Question Area */}
+                  <div className="p-8">
+                    <h2 className="text-2xl font-black text-slate-900 mb-8 leading-tight">
+                      {QUIZ_QUESTIONS[quizIndex].question}
+                    </h2>
+                    
+                    <div className="space-y-4">
+                      {QUIZ_QUESTIONS[quizIndex].options.map((opt, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleQuizAnswer(i)}
+                          className="w-full text-left p-5 rounded-2xl border-2 border-slate-100 hover:border-orange-500 hover:bg-orange-50/50 transition-all font-medium text-slate-700 active:scale-[0.98] focus:outline-none"
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="p-5 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+                    <span className="text-sm font-bold text-slate-400">Question {quizIndex + 1} sur {QUIZ_QUESTIONS.length}</span>
+                  </div>
+                </div>
+              ) : (
+                /* Loading AI Consolidation */
+                <div className="bg-white rounded-3xl p-16 text-center shadow-2xl border border-slate-100 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-slate-100">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-orange-400 to-orange-600"
+                      initial={{ width: "0%" }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 3, ease: "easeInOut" }}
+                    />
+                  </div>
+                  
+                  <div className="relative w-32 h-32 mx-auto mb-8">
+                    <motion.div 
+                      animate={{ rotate: -360 }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 rounded-full border-[3px] border-dashed border-blue-200"
+                    />
+                    <motion.div 
+                      animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute inset-2 bg-gradient-to-tr from-blue-100 to-white rounded-full shadow-inner flex items-center justify-center"
+                    >
+                      <Activity className="w-12 h-12 text-blue-500" />
+                    </motion.div>
+                  </div>
+                  
+                  <h3 className="text-2xl font-black text-slate-900 mb-3">Croisement des données...</h3>
+                  <p className="text-slate-500 font-medium animate-pulse">Fusion des résultats du test avec tes bulletins.</p>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* STEP 3: MINI-CHAT ORI */}
+          {step === 3 && (
+            <motion.div 
+              key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
               className="max-w-2xl mx-auto bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden flex flex-col h-[500px]"
             >
               <div className="bg-slate-900 p-4 flex items-center gap-3">
@@ -281,7 +439,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-white">Assistant ORI</h3>
-                  <p className="text-slate-400 text-xs font-medium">Analyse en cours...</p>
+                  <p className="text-slate-400 text-xs font-medium">Finalisation du profil...</p>
                 </div>
               </div>
 
@@ -318,10 +476,10 @@ export default function ProfilePage() {
             </motion.div>
           )}
 
-          {/* STEP 3: VERIFICATION & MANUAL ENTRY */}
-          {step === 3 && (
+          {/* STEP 4: VERIFICATION & MANUAL ENTRY */}
+          {step === 4 && (
             <motion.div 
-              key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+              key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
               className="bg-white border border-slate-200 rounded-[2rem] p-8 md:p-12 shadow-xl"
             >
               <div className="flex items-center gap-3 mb-8 pb-6 border-b border-slate-100">
@@ -330,7 +488,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-slate-900">Vérifie tes informations</h2>
-                  <p className="text-slate-500 text-sm font-medium">L'IA a pré-rempli ton profil. Modifie ce qui te semble incorrect.</p>
+                  <p className="text-slate-500 text-sm font-medium">L'IA a généré ton profil à partir des bulletins, du test et du chat.</p>
                 </div>
               </div>
 
@@ -390,7 +548,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="mt-10 flex gap-4 pt-6 border-t border-slate-100">
-                <Button variant="outline" onClick={() => setStep(1)} className="h-14 px-8 rounded-xl border-slate-200 text-slate-600 font-bold hover:bg-slate-50">Retour</Button>
+                <Button variant="outline" onClick={() => setStep(1)} className="h-14 px-8 rounded-xl border-slate-200 text-slate-600 font-bold hover:bg-slate-50 hidden md:block">Recommencer</Button>
                 <Button onClick={saveProfile} disabled={saving || !name || !city || !level} className="flex-1 h-14 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 rounded-xl shadow-[0_0_20px_rgba(249,115,22,0.3)] font-black text-lg transition-transform active:scale-[0.98]">
                   {saving ? <Loader2 className="w-6 h-6 animate-spin" /> : "Créer mon Persona"}
                 </Button>
@@ -398,10 +556,10 @@ export default function ProfilePage() {
             </motion.div>
           )}
 
-          {/* STEP 4: PERSONA DASHBOARD */}
-          {step === 4 && (
+          {/* STEP 5: PERSONA DASHBOARD */}
+          {step === 5 && (
             <motion.div 
-              key="step4" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+              key="step5" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
               className="space-y-8"
             >
               {/* Dashboard Header */}
@@ -412,11 +570,11 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight">Ton Persona est Actif</h2>
-                    <p className="text-slate-500 font-medium">L'IA personnalise désormais ton expérience.</p>
+                    <p className="text-slate-500 font-medium">Croisement des bulletins, test de logique et entretiens réussi.</p>
                   </div>
                 </div>
                 <Button onClick={() => setStep(1)} variant="outline" className="rounded-xl font-bold text-slate-600 border-slate-200 hover:bg-slate-50">
-                  Mettre à jour
+                  Refaire les tests
                 </Button>
               </div>
 
@@ -434,7 +592,6 @@ export default function ProfilePage() {
                     className="relative w-48 h-48 mb-6 z-10"
                   >
                     <div className="absolute inset-0 bg-orange-500/20 blur-2xl rounded-full" />
-                    {/* Using a high quality 3D student icon placeholder */}
                     <img 
                       src="https://static.vecteezy.com/system/resources/previews/011/153/360/original/3d-web-developer-working-on-project-illustration-png.png" 
                       alt="3D Avatar" 
@@ -496,7 +653,7 @@ export default function ProfilePage() {
                     <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative">
                       <Sparkles className="absolute top-4 right-4 w-5 h-5 text-orange-400" />
                       <p className="text-slate-600 leading-relaxed font-medium">
-                        D'après l'analyse de tes résultats et de tes intérêts, tu as un profil très équilibré. Ta rigueur combinée à un fort intérêt pour l'innovation te destine naturellement vers des filières hybrides (Ingénierie, Tech & Management). ORI te recommandera en priorité des salons technologiques et des écoles d'ingénieurs.
+                        D'après l'analyse croisée de tes bulletins et du test logique chronométré, tu as un profil très équilibré. Ta rigueur combinée à une forte aptitude de résolution de problème te destine naturellement vers des filières hybrides (Ingénierie, Tech & Management). ORI te recommandera en priorité des salons technologiques et des écoles d'ingénieurs.
                       </p>
                     </div>
                   </div>
