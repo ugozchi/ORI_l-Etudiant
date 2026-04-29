@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Users, Heart, X, Check, Search, Calendar, GraduationCap } from 'lucide-react';
+import { MapPin, Users, Heart, X, Check, Search, Calendar, GraduationCap, Sparkles, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
@@ -27,6 +27,7 @@ export default function SalonsPage() {
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
+  const [isFlipped, setIsFlipped] = useState(false);
   
   const supabase = createClient();
 
@@ -58,30 +59,40 @@ export default function SalonsPage() {
   }, [supabase]);
 
   const handleSwipe = (dir: 'left' | 'right') => {
+    if (isFlipped) {
+      setIsFlipped(false);
+      // Wait for flip animation to finish before swiping, or just swipe instantly
+      setTimeout(() => executeSwipe(dir), 150);
+    } else {
+      executeSwipe(dir);
+    }
+  };
+
+  const executeSwipe = (dir: 'left' | 'right') => {
     setDirection(dir);
     setTimeout(() => {
       setCurrentIndex((prev) => prev + 1);
       setDirection(null);
     }, 300);
-  };
+  }
 
   const getCardStyle = (index: number) => {
     const isCurrent = index === currentIndex;
     const isNext = index === currentIndex + 1;
     
-    if (isCurrent) return "z-20 scale-100 opacity-100";
-    if (isNext) return "z-10 scale-[0.92] opacity-70 translate-y-6";
-    return "z-0 scale-90 opacity-0 translate-y-12";
+    if (isCurrent) return "z-20";
+    if (isNext) return "z-10";
+    return "z-0";
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden relative">
+    <div className="flex flex-col h-full overflow-y-auto relative pb-24">
       {/* Background Decor */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-400/5 blur-[100px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/3" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-slate-900/5 blur-[100px] rounded-full pointer-events-none translate-y-1/3 -translate-x-1/3" />
 
       {/* Header */}
-      <header className="px-6 py-6 border-b border-white/40 bg-white/60 backdrop-blur-xl z-30 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+      <header className="px-6 py-6 border-b border-white/40 bg-white/60 backdrop-blur-xl z-30 shadow-[0_4px_30px_rgba(0,0,0,0.03)] sticky top-0">
         <div className="flex items-center justify-between max-w-lg mx-auto w-full">
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">ORI Matcher</h1>
@@ -94,9 +105,9 @@ export default function SalonsPage() {
       </header>
 
       {/* Main Swiper Area */}
-      <div className="flex-1 relative flex items-center justify-center p-4">
+      <div className="flex-1 relative flex flex-col items-center justify-start p-4 min-h-[750px] mt-8">
         {loading ? (
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-4 mt-20">
             <div className="w-12 h-12 border-4 border-orange-100 border-t-orange-500 rounded-full animate-spin" />
             <p className="text-slate-500 font-bold tracking-wide uppercase text-sm animate-pulse">Recherche des salons...</p>
           </div>
@@ -104,7 +115,7 @@ export default function SalonsPage() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center max-w-sm bg-white p-10 rounded-3xl shadow-xl border border-slate-100 relative overflow-hidden"
+            className="text-center max-w-sm bg-white p-10 rounded-3xl shadow-xl border border-slate-100 relative overflow-hidden mt-10"
           >
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-400 to-orange-600" />
             <div className="w-20 h-20 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-orange-100">
@@ -117,7 +128,7 @@ export default function SalonsPage() {
             </Button>
           </motion.div>
         ) : (
-          <div className="relative w-full max-w-[380px] h-[620px] perspective-1000">
+          <div className="relative w-full max-w-[380px] h-[620px] perspective-1000 mx-auto">
             <AnimatePresence>
               {fairs.map((fair, idx) => {
                 if (idx < currentIndex || idx > currentIndex + 1) return null;
@@ -133,36 +144,51 @@ export default function SalonsPage() {
                       y: isCurrent ? 0 : 24,
                       x: isCurrent && direction === 'left' ? -350 : isCurrent && direction === 'right' ? 350 : 0,
                       rotate: isCurrent && direction === 'left' ? -20 : isCurrent && direction === 'right' ? 20 : 0,
+                      rotateY: isCurrent && isFlipped ? 180 : 0,
                     }}
                     transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                    style={{ transformStyle: 'preserve-3d' }}
+                    onClick={() => isCurrent && setIsFlipped(!isFlipped)}
                     className={cn(
-                      "absolute inset-0 w-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] bg-white border border-white/50",
+                      "absolute inset-0 w-full cursor-pointer",
                       getCardStyle(idx)
                     )}
                   >
-                    {/* Background Image */}
+                    {/* FRONT FACE */}
                     <div 
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-105"
-                      style={{ backgroundImage: `url(${fair.image_url})` }}
-                    />
-                    
-                    {/* Rich Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/70 to-transparent opacity-95" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent h-1/3" />
+                      className="absolute inset-0 w-full h-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] bg-white border border-white/50 flex flex-col justify-end"
+                      style={{ backfaceVisibility: 'hidden' }}
+                    >
+                      {/* Background Image */}
+                      <div 
+                        className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-105"
+                        style={{ backgroundImage: `url(${fair.image_url})` }}
+                      />
+                      
+                      {/* Rich Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/70 to-transparent opacity-95" />
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent h-1/3" />
 
-                    {/* Content */}
-                    <div className="absolute inset-x-0 bottom-0 p-8 flex flex-col justify-end h-full pb-28">
-                      {fair.match_score && (
-                        <div className="absolute top-6 left-6 px-4 py-1.5 bg-white/20 backdrop-blur-xl rounded-full border border-white/30 shadow-lg flex items-center gap-2">
-                          <div className={cn(
-                            "w-2.5 h-2.5 rounded-full shadow-[0_0_10px_currentColor]",
-                            fair.match_score > 80 ? "bg-green-400 text-green-400" : fair.match_score > 50 ? "bg-yellow-400 text-yellow-400" : "bg-red-400 text-red-400",
-                          )} />
-                          <span className="text-white font-bold text-sm tracking-wide">{Math.round(fair.match_score)}% Match</span>
+                      {/* Flip Hint */}
+                      {isCurrent && (
+                        <div className="absolute top-6 right-6 px-3 py-2 bg-white/20 backdrop-blur-xl rounded-full border border-white/30 flex items-center gap-2 animate-bounce">
+                          <RefreshCcw className="w-4 h-4 text-white" />
+                          <span className="text-white text-xs font-bold uppercase tracking-wider">Toucher pour voir l'analyse</span>
                         </div>
                       )}
 
-                      <div className="space-y-4 relative z-10">
+                      {/* Content */}
+                      <div className="relative z-10 p-8 pb-28 space-y-4">
+                        {fair.match_score && (
+                          <div className="inline-flex px-4 py-1.5 bg-white/20 backdrop-blur-xl rounded-full border border-white/30 shadow-lg items-center gap-2 mb-2">
+                            <div className={cn(
+                              "w-2.5 h-2.5 rounded-full shadow-[0_0_10px_currentColor]",
+                              fair.match_score > 80 ? "bg-green-400 text-green-400" : fair.match_score > 50 ? "bg-yellow-400 text-yellow-400" : "bg-red-400 text-red-400",
+                            )} />
+                            <span className="text-white font-bold text-sm tracking-wide">{Math.round(fair.match_score)}% Match</span>
+                          </div>
+                        )}
+
                         <div>
                           <h2 className="text-3xl font-black text-white leading-tight mb-2 tracking-tight drop-shadow-md">
                             {fair.name}
@@ -197,6 +223,63 @@ export default function SalonsPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* BACK FACE (IA Analysis) */}
+                    <div 
+                      className="absolute inset-0 w-full h-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] bg-slate-900 border border-slate-700 flex flex-col p-8"
+                      style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                    >
+                      {/* Inner Glow */}
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/20 blur-[60px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2" />
+                      
+                      <div className="flex items-center gap-3 mb-8 relative z-10">
+                        <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30">
+                          <Sparkles className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-black text-white">Analyse de l'IA</h3>
+                          <p className="text-orange-400 text-sm font-bold">Pourquoi ce salon ?</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6 relative z-10 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-sm">
+                          <h4 className="text-white font-bold mb-2 flex items-center gap-2">
+                            <Heart className="w-4 h-4 text-pink-400" /> Ton Profil
+                          </h4>
+                          <p className="text-slate-300 text-sm leading-relaxed">
+                            Ton Persona indique un fort intérêt pour <strong className="text-white">l'Innovation et la Logique</strong>. Ce salon propose plus de 15 conférences exclusives sur l'avenir de l'IA et de l'ingénierie, en plein dans ta zone de génie.
+                          </p>
+                        </div>
+
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-sm">
+                          <h4 className="text-white font-bold mb-2 flex items-center gap-2">
+                            <GraduationCap className="w-4 h-4 text-blue-400" /> Écoles à voir absolument
+                          </h4>
+                          <ul className="text-slate-300 text-sm space-y-3">
+                            <li className="flex items-start gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
+                              <span><strong className="text-white">EPITA :</strong> Parfaite pour ton côté technique et logique mathématique.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
+                              <span><strong className="text-white">Rubika :</strong> Idéale si tu veux combiner tes compétences techniques avec ta créativité (Jeux Vidéo).</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="mt-auto pt-6 text-center">
+                        <Button 
+                          onClick={(e) => { e.stopPropagation(); setIsFlipped(false); }}
+                          variant="ghost" 
+                          className="text-slate-400 hover:text-white hover:bg-white/10"
+                        >
+                          <RefreshCcw className="w-4 h-4 mr-2" /> Retour à la carte
+                        </Button>
+                      </div>
+                    </div>
+
                   </motion.div>
                 );
               })}
@@ -206,13 +289,13 @@ export default function SalonsPage() {
             {currentIndex < fairs.length && (
               <div className="absolute -bottom-8 left-0 right-0 flex justify-center gap-6 z-40">
                 <Button 
-                  onClick={() => handleSwipe('left')}
+                  onClick={(e) => { e.stopPropagation(); handleSwipe('left'); }}
                   className="w-16 h-16 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-400 hover:text-red-500 shadow-xl transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
                 >
                   <X className="h-8 w-8" />
                 </Button>
                 <Button 
-                  onClick={() => handleSwipe('right')}
+                  onClick={(e) => { e.stopPropagation(); handleSwipe('right'); }}
                   className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 border-none text-white shadow-xl shadow-orange-500/40 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
                 >
                   <Heart className="h-7 w-7 fill-current" />
