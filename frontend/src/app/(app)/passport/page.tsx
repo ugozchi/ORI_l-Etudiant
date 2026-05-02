@@ -5,11 +5,14 @@ import { Loader2, QrCode, Smartphone, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/utils/supabase/client';
 import { motion } from 'framer-motion';
+import { useProfile } from '@/contexts/ProfileContext';
+import { LockedOverlay } from '@/components/layout/LockedOverlay';
 
 export default function PassportPage() {
   const [qrBase64, setQrBase64] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
+  const { isProfileComplete } = useProfile();
 
   useEffect(() => {
     const fetchPassport = async () => {
@@ -41,6 +44,7 @@ export default function PassportPage() {
 
   return (
     <div className="min-h-full flex flex-col items-center py-12 px-4 overflow-y-auto relative perspective-[2000px]">
+      {!isProfileComplete && <LockedOverlay />}
       <div className="max-w-md w-full relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}

@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { createClient } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useProfile } from '@/contexts/ProfileContext';
+import { LockedOverlay } from '@/components/layout/LockedOverlay';
 
 export default function DocsPage() {
   const [docType, setDocType] = useState('cover_letter');
@@ -16,6 +18,7 @@ export default function DocsPage() {
   const [result, setResult] = useState('');
   
   const supabase = createClient();
+  const { isProfileComplete } = useProfile();
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +58,8 @@ export default function DocsPage() {
   };
 
   return (
-    <div className="min-h-full bg-slate-50 flex flex-col lg:flex-row overflow-hidden">
+    <div className="min-h-full bg-slate-50 flex flex-col lg:flex-row overflow-hidden relative">
+      {!isProfileComplete && <LockedOverlay />}
       
       {/* Left Panel: Configuration */}
       <div className="w-full lg:w-[450px] border-r border-slate-200 bg-white overflow-y-auto p-6 md:p-8 flex flex-col shadow-sm z-10">

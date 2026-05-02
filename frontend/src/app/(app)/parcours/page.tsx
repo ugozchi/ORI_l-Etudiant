@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input';
 import { createClient } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useProfile } from '@/contexts/ProfileContext';
+import { LockedOverlay } from '@/components/layout/LockedOverlay';
 
 interface AcademicStep {
   id: string;
@@ -59,6 +61,7 @@ export default function ParcoursPage() {
   const [newStep, setNewStep] = useState<Omit<AcademicStep, 'id'>>(EMPTY_STEP);
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
+  const { isProfileComplete } = useProfile();
 
   const supabase = createClient();
 
@@ -109,6 +112,7 @@ export default function ParcoursPage() {
 
   return (
     <div className="min-h-full p-6 lg:p-12 relative overflow-y-auto">
+      {!isProfileComplete && <LockedOverlay />}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-400/5 blur-[100px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none translate-y-1/2 -translate-x-1/2" />
 

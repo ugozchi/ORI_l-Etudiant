@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { createClient } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useProfile } from '@/contexts/ProfileContext';
+import { LockedOverlay } from '@/components/layout/LockedOverlay';
 
 type Article = {
   id: string;
@@ -32,6 +34,7 @@ export default function NewsletterPage() {
   const [loadingMore, setLoadingMore] = useState(false);
 
   const supabase = createClient();
+  const { isProfileComplete } = useProfile();
 
   useEffect(() => {
     const fetchPreview = async () => {
@@ -144,7 +147,8 @@ export default function NewsletterPage() {
   };
 
   return (
-    <div className="min-h-full bg-slate-50 overflow-y-auto">
+    <div className="min-h-full bg-slate-50 overflow-y-auto relative">
+      {!isProfileComplete && <LockedOverlay />}
       
       {/* Heroic Subscription Banner */}
       <section className="relative px-6 py-20 md:py-32 border-b border-slate-200 overflow-hidden bg-slate-900">

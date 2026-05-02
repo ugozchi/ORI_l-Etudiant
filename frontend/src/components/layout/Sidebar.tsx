@@ -3,23 +3,25 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MessageCircle, User, Users, Newspaper, FileText, Compass, ChevronLeft, ChevronRight, Route } from 'lucide-react';
+import { MessageCircle, User, Users, Newspaper, FileText, Compass, ChevronLeft, ChevronRight, Route, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useProfile } from '@/contexts/ProfileContext';
 
 const navItems = [
-  { name: 'Chat', href: '/chat', icon: MessageCircle },
-  { name: 'Parcours', href: '/parcours', icon: Route },
-  { name: 'Salons', href: '/salons', icon: Users },
-  { name: 'Newsletter', href: '/newsletter', icon: Newspaper },
-  { name: 'Docs', href: '/docs', icon: FileText },
-  { name: 'Passport', href: '/passport', icon: Compass },
-  { name: 'Profil', href: '/profil', icon: User },
+  { name: 'Chat', href: '/chat', icon: MessageCircle, alwaysAccessible: true },
+  { name: 'Parcours', href: '/parcours', icon: Route, alwaysAccessible: false },
+  { name: 'Salons', href: '/salons', icon: Users, alwaysAccessible: false },
+  { name: 'Newsletter', href: '/newsletter', icon: Newspaper, alwaysAccessible: false },
+  { name: 'Docs', href: '/docs', icon: FileText, alwaysAccessible: false },
+  { name: 'Passport', href: '/passport', icon: Compass, alwaysAccessible: false },
+  { name: 'Profil', href: '/profil', icon: User, alwaysAccessible: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isProfileComplete, isLoading } = useProfile();
 
   return (
     <aside className={cn(
@@ -46,6 +48,30 @@ export function Sidebar() {
       <nav className="flex-1 space-y-1.5">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
+          const isLocked = !isLoading && !isProfileComplete && !item.alwaysAccessible;
+
+          if (isLocked) {
+            return (
+              <div
+                key={item.name}
+                className={cn(
+                  "flex items-center rounded-xl text-sm transition-all duration-200 group relative overflow-hidden cursor-not-allowed",
+                  isCollapsed ? "justify-center py-3" : "py-3 px-3 gap-3",
+                  "text-slate-600 opacity-50"
+                )}
+                title={isCollapsed ? `${item.name} — Remplis ton profil` : "Remplis ton profil pour débloquer"}
+              >
+                <item.icon className="h-5 w-5 shrink-0 text-slate-600" />
+                {!isCollapsed && (
+                  <>
+                    <span className="flex-1">{item.name}</span>
+                    <Lock className="h-3.5 w-3.5 text-slate-600" />
+                  </>
+                )}
+              </div>
+            );
+          }
+
           return (
             <Link
               key={item.name}

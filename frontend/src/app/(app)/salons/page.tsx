@@ -6,6 +6,8 @@ import { MapPin, Users, Heart, X, Check, Search, Calendar, GraduationCap, Sparkl
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
+import { useProfile } from '@/contexts/ProfileContext';
+import { LockedOverlay } from '@/components/layout/LockedOverlay';
 
 type Fair = {
   id: string;
@@ -36,6 +38,7 @@ export default function SalonsPage() {
   const [listFilter, setListFilter] = useState<'all' | 'liked' | 'disliked' | 'top'>('all');
   
   const supabase = createClient();
+  const { isProfileComplete } = useProfile();
 
   useEffect(() => {
     const fetchFairs = async () => {
@@ -117,6 +120,7 @@ export default function SalonsPage() {
 
   return (
     <div className="flex flex-col h-full overflow-y-auto relative pb-24">
+      {!isProfileComplete && <LockedOverlay />}
       {/* Background Decor */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-400/5 blur-[100px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/3" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-slate-900/5 blur-[100px] rounded-full pointer-events-none translate-y-1/3 -translate-x-1/3" />

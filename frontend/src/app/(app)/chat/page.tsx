@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Send, User, Bot, Loader2, PlusCircle, MessageSquare, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Send, User, Bot, Loader2, PlusCircle, MessageSquare, PanelLeftClose, PanelLeftOpen, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { createClient } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
+import { useProfile } from '@/contexts/ProfileContext';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 type Message = {
   id: string;
@@ -29,6 +32,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { isProfileComplete } = useProfile();
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
@@ -115,14 +119,19 @@ export default function ChatPage() {
     const msgs = allMessages.filter(m => (m.thread_id || userId) === currentThreadId);
     
     if (msgs.length === 0) {
+      const welcomeContent = !isProfileComplete
+        ? "Salut ! 👋 Je suis **ORI**, ton conseiller d'orientation propulsé par l'IA.\n\nAvant de commencer, j'ai besoin de mieux te connaître. Tu peux :\n\n**→ Compléter ton profil** pour que je puisse te faire des recommandations personnalisées\n\n**→ Ou me poser directement une question** sur ton orientation !"
+        : "Rebonjour ! 👋 Je suis ORI, ton conseiller d'orientation. Comment puis-je t'aider aujourd'hui ?";
+      
       return [{
         id: 'welcome',
         role: 'assistant',
-        content: 'Bonjour ! Je suis ORI, ton conseiller d\'orientation propulsé par l\'IA. Comment puis-je t\'aider aujourd\'hui ?'
-      } as Message];
+        content: welcomeContent,
+        isWelcome: true,
+      } as Message & { isWelcome?: boolean }];
     }
     return msgs;
-  }, [allMessages, currentThreadId, userId]);
+  }, [allMessages, currentThreadId, userId, isProfileComplete]);
 
   const handleNewChat = () => {
     if (loading) return;
@@ -275,7 +284,7 @@ export default function ChatPage() {
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-16 md:pt-8" ref={scrollRef}>
           <div className="max-w-3xl mx-auto space-y-8 pb-36">
-            {currentMessages.map((msg: Message) => (
+            {currentMessages.map((msg: any) => (
               <div
                 key={msg.id}
                 className={cn(
@@ -292,13 +301,33 @@ export default function ChatPage() {
                   {msg.role === 'user' ? <User className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-white" />}
                 </div>
                 
-                <div className={cn(
-                  "py-3.5 px-5 rounded-3xl max-w-[80%] shadow-sm relative group-hover:shadow-md transition-shadow",
-                  msg.role === 'user' 
-                    ? "bg-orange-500 text-white rounded-tr-sm" 
-                    : "bg-white border border-slate-100 text-slate-800 rounded-tl-sm"
-                )}>
-                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{msg.content}</p>
+                <div className="flex flex-col gap-3 max-w-[80%]">
+                  <div className={cn(
+                    "py-3.5 px-5 rounded-3xl shadow-sm relative group-hover:shadow-md transition-shadow",
+                    msg.role === 'user' 
+                      ? "bg-orange-500 text-white rounded-tr-sm" 
+                      : "bg-white border border-slate-100 text-slate-800 rounded-tl-sm"
+                  )}>
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{msg.content}</p>
+                  </div>
+
+                  {/* CTA Buttons for welcome message when profile is incomplete */}
+                  {msg.isWelcome && !isProfileComplete && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="flex flex-col sm:flex-row gap-2"
+                    >
+                      <Link href="/profil">
+                        <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold h-11 px-5 shadow-md shadow-orange-500/20 gap-2 text-sm">
+                          <Sparkles className="w-4 h-4" />
+                          Compléter mon profil
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </motion.div>
+                  )}
                 </div>
               </div>
             ))}

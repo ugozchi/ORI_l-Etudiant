@@ -36,51 +36,51 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0A0A0A] p-4">
-      <div className="w-full max-w-sm space-y-8 bg-[#121212] p-8 rounded-2xl border border-[#2C2C2C] shadow-xl">
+    <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
+      <div className="w-full max-w-sm space-y-8 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl">
         <div className="text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white text-xl mb-4 shadow-lg">
+          <div className="mx-auto w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center font-black text-white text-xl mb-4 shadow-lg shadow-orange-500/20">
             O
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-white">Rebonjour</h2>
-          <p className="text-sm text-zinc-400 mt-2">Connectez-vous à l'espace ORI</p>
+          <h2 className="text-2xl font-black tracking-tight text-slate-900">Rebonjour</h2>
+          <p className="text-sm text-slate-500 mt-2 font-medium">Connecte-toi à ton espace ORI</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-zinc-300">Email</Label>
+            <Label htmlFor="email" className="text-slate-700 font-bold text-xs uppercase tracking-wider">Email</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-[#1A1A1A] border-[#3C3C3C] text-white placeholder:text-zinc-500 focus-visible:ring-indigo-500"
+              className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-orange-500 h-11 rounded-xl"
               placeholder="votre@email.com"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-zinc-300">Mot de passe</Label>
+            <Label htmlFor="password" className="text-slate-700 font-bold text-xs uppercase tracking-wider">Mot de passe</Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-[#1A1A1A] border-[#3C3C3C] text-white focus-visible:ring-indigo-500"
+              className="bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500 h-11 rounded-xl"
             />
           </div>
           
-          {error && <p className="text-red-400 text-sm font-medium">{error}</p>}
+          {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
           
-          <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" disabled={loading}>
+          <Button type="submit" className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-500/20" disabled={loading}>
             {loading ? 'Connexion en cours...' : 'Se connecter'}
           </Button>
         </form>
 
-        <div className="text-center text-sm text-zinc-400">
+        <div className="text-center text-sm text-slate-500">
           Pas encore de compte ?{' '}
-          <Link href="/signup" className="text-indigo-400 hover:text-indigo-300 font-medium">
+          <Link href="/signup" className="text-orange-500 hover:text-orange-600 font-bold">
             S'inscrire
           </Link>
         </div>
