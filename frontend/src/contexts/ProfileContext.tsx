@@ -53,13 +53,23 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       }
 
       const res = await fetch(apiUrl(`/api/profile/${uid}`));
-      let profile = { email: session?.user?.email };
+      let profile: any = { email: session?.user?.email };
+      
       if (res.ok) {
         const json = await res.json();
         if (json.status === 'success' && json.data) {
           profile = { ...profile, ...json.data };
         }
       }
+
+      // Récupérer le nom de l'inscription si manquant
+      if (!profile.name) {
+        const meta = session?.user?.user_metadata;
+        if (meta?.first_name) {
+          profile.name = `${meta.first_name} ${meta.last_name || ''}`.trim();
+        }
+      }
+
       setProfileData(profile);
       localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile));
     } catch {
