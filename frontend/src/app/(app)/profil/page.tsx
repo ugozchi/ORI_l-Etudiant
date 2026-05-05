@@ -123,6 +123,18 @@ export default function ProfilePage() {
       setCity(profileData.city || '');
       setLevel(profileData.level || '');
       setInterests(profileData.interests || []);
+      
+      if (profileData.is_complete || profileData.strengths) {
+        if (profileData.scores) setScores(profileData.scores);
+        if (profileData.strengths_data) {
+          setStrengths(profileData.strengths_data);
+        } else if (profileData.strengths) {
+          // Fallback if only names are stored
+          const fallback = profileData.strengths.map((s: string) => ({ name: s, val: 80 }));
+          setStrengths(fallback);
+        }
+        setStep(5);
+      }
     }
   }, [profileData]);
 
@@ -220,7 +232,7 @@ export default function ProfilePage() {
   };
 
   const advanceBlock = (nextIndex: number) => {
-    setGameTimer(300);
+    setGameTimer(180);
     setGameIndex(nextIndex);
     setSubGame('A');
     // Update real-time progress in Sidebar
@@ -345,7 +357,8 @@ export default function ProfilePage() {
       const profileDataToSave = {
         name, city, level, interests,
         strengths: strengths.map(s => s.name),
-        scores: { logic: scores.logic, math: scores.math },
+        strengths_data: strengths,
+        scores: scores,
         is_complete: true
       };
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/${userId}`, {

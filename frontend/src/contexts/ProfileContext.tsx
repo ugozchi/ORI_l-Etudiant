@@ -49,12 +49,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       }
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/${uid}`);
+      let profile = { email: session?.user?.email };
       if (res.ok) {
         const json = await res.json();
         if (json.status === 'success' && json.data) {
-          setProfileData(json.data);
+          profile = { ...profile, ...json.data };
         }
       }
+      setProfileData(profile);
     } catch {
       // Profile doesn't exist yet — that's expected for new users
     } finally {
