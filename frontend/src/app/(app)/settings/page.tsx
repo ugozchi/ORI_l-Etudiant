@@ -47,25 +47,24 @@ export default function SettingsPage() {
       const { data: { session } } = await supabase.auth.getSession();
       const uid = session?.user?.id;
       if (!uid) return;
-      
-      const currentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/${uid}`);
-      let currentData = {};
-      if (currentRes.ok) {
-        const json = await currentRes.json();
-        if (json.status === 'success') currentData = json.data;
-      }
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          ...currentData,
           user_id: uid,
+          // Keep existing advanced profile fields when available
+          strengths: profileData?.strengths ?? [],
+          strengths_data: profileData?.strengths_data ?? [],
+          scores: profileData?.scores ?? null,
+          is_complete: profileData?.is_complete ?? false,
+          tests_retake_count: profileData?.tests_retake_count ?? 0,
+          target_diploma: profileData?.target_diploma ?? null,
+          mobility: profileData?.mobility ?? false,
           name, 
           city, 
           level, 
-          interests,
-          mobility: (currentData as { mobility?: boolean }).mobility ?? false
+          interests
         }),
       });
       
@@ -77,9 +76,11 @@ export default function SettingsPage() {
       } else {
         const err = await res.text();
         console.error("Save failed:", err);
+        alert("La sauvegarde des paramètres a échoué. Vérifie que le backend est bien redéployé.");
       }
     } catch (err) {
       console.error(err);
+      alert("Erreur réseau pendant la sauvegarde des paramètres.");
     } finally {
       setLoading(false);
     }

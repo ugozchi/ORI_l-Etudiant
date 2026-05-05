@@ -103,6 +103,16 @@ export default function ProfilePage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [retakeCount, setRetakeCount] = useState(0);
   const MAX_RETAKES = 2;
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [bulletinAnalyzing, setBulletinAnalyzing] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const ORI_FOLLOWUP_MESSAGES = [
+    "Top. Et côté façon de travailler, tu préfères les projets en équipe ou avancer seul sur des sujets techniques ?",
+    "J'adore. Dernière question: tu te projettes plutôt vers des études longues, de l'alternance, ou un mix des deux ?",
+    "Parfait. Avec ce que tu m'as dit + tes tests, je peux affiner ton Persona avec une recommandation beaucoup plus fiable.",
+  ];
 
   // Timer effect
   useEffect(() => {
@@ -358,18 +368,21 @@ export default function ProfilePage() {
     setAnalyzing(true);
     setTimeout(() => {
       setAnalyzing(false);
-      setQuestionIndex(prev => prev + 1);
-      if (questionIndex === 0) {
-        setChatMessages(prev => [...prev, { role: 'ori', content: "C'est noté. Au fait, j'ai vu que tu aimais l'informatique. Quel genre de projets te passionne le plus ?" }]);
+      const nextIndex = questionIndex + 1;
+      setQuestionIndex(nextIndex);
+      if (questionIndex < ORI_FOLLOWUP_MESSAGES.length) {
+        setChatMessages(prev => [...prev, { role: 'ori', content: ORI_FOLLOWUP_MESSAGES[questionIndex] }]);
       } else {
-        setChatMessages(prev => [...prev, { role: 'ori', content: "Parfait. J'ai tout ce qu'il me faut pour finaliser ton Persona. On vérifie les derniers détails ?" }]);
-        setTimeout(() => setStep(4), 1500);
+        setChatMessages(prev => [...prev, { role: 'ori', content: "On y est. Passe à la vérification finale et génère ton Persona." }]);
+        setTimeout(() => setStep(4), 1200);
       }
     }, 1000);
   };
 
   const saveProfile = async () => {
     setSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const sessionUserId = session?.user?.id;
@@ -399,6 +412,7 @@ export default function ProfilePage() {
       if (res.ok) {
         updateProfileLocally(profileDataToSave);
         setUserId(effectiveUserId);
+        setSaveSuccess(true);
         setStep(5);
       } else {
         const err = await res.text();
@@ -406,9 +420,24 @@ export default function ProfilePage() {
       }
     } catch (err) {
       console.error(err);
+      setSaveError(err instanceof Error ? err.message : "Erreur inconnue lors de la sauvegarde.");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleBulletinFiles = (files: FileList | null) => {
+    if (!files) return;
+    const onlyPdf = Array.from(files).filter((f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+    setUploadedFiles(onlyPdf);
+  };
+
+  const handleFakeBulletinAnalysis = () => {
+    setBulletinAnalyzing(true);
+    setTimeout(() => {
+      setBulletinAnalyzing(false);
+      setStep(2);
+    }, 1400);
   };
 
   const resetTestsState = () => {
@@ -534,8 +563,29 @@ export default function ProfilePage() {
                   </div>
                   <h2 className="text-2xl font-black text-slate-900 mb-2">Importe tes bulletins</h2>
                   <p className="text-slate-500 mb-8 font-medium">Glisse tes fichiers PDF pour que ORI comprenne ton parcours académique.</p>
-                  <Button onClick={() => setStep(2)} className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg font-black text-lg transition-transform active:scale-[0.98]">
-                    Commencer les tests
+                  <label className="w-full mb-4">
+                    <input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => handleBulletinFiles(e.target.files)}
+                    />
+                    <div className="w-full cursor-pointer rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 py-4 px-3 text-sm font-bold text-slate-600 hover:border-orange-400 hover:text-orange-600 transition-colors">
+                      {uploadedFiles.length > 0 ? `${uploadedFiles.length} bulletin(s) sélectionné(s)` : 'Déposer mes bulletins (PDF)'}
+                    </div>
+                  </label>
+                  {uploadedFiles.length > 0 && (
+                    <p className="text-xs text-slate-500 mb-4 max-w-xs">
+                      {uploadedFiles.map((f) => f.name).join(', ')}
+                    </p>
+                  )}
+                  <Button
+                    onClick={handleFakeBulletinAnalysis}
+                    disabled={bulletinAnalyzing}
+                    className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg font-black text-lg transition-transform active:scale-[0.98]"
+                  >
+                    {bulletinAnalyzing ? 'Analyse IA des bulletins...' : 'Analyser puis commencer les tests'}
                   </Button>
                   <p className="mt-4 text-xs text-slate-400 font-bold uppercase tracking-widest cursor-pointer hover:text-slate-600" onClick={() => setStep(2)}>Passer l'import pour l'instant</p>
                 </div>
@@ -784,6 +834,8 @@ export default function ProfilePage() {
                   {saving ? <Loader2 className="w-6 h-6 animate-spin" /> : "Générer mon Persona"}
                 </Button>
               </div>
+              {saveError && <p className="mt-4 text-sm font-bold text-red-600">{saveError}</p>}
+              {saveSuccess && <p className="mt-4 text-sm font-bold text-green-600">Persona généré et sauvegardé.</p>}
             </motion.div>
           )}
 
