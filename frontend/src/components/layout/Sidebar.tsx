@@ -3,19 +3,27 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MessageCircle, User, Users, Newspaper, FileText, Compass, ChevronLeft, ChevronRight, Route, Lock } from 'lucide-react';
+import { 
+  MessageCircle, User, Users, Newspaper, FileText, 
+  Compass, ChevronLeft, ChevronRight, Route, Lock, 
+  Sliders 
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/contexts/ProfileContext';
 import { motion } from 'framer-motion';
 
-const navItems = [
+const mainItems = [
   { name: 'Chat', href: '/chat', icon: MessageCircle, alwaysAccessible: true },
   { name: 'Parcours', href: '/parcours', icon: Route, alwaysAccessible: false },
   { name: 'Salons', href: '/salons', icon: Users, alwaysAccessible: false },
   { name: 'Newsletter', href: '/newsletter', icon: Newspaper, alwaysAccessible: false },
   { name: 'Docs', href: '/docs', icon: FileText, alwaysAccessible: false },
   { name: 'Passport', href: '/passport', icon: Compass, alwaysAccessible: false },
+];
+
+const footerItems = [
+  { name: 'Paramètres', href: '/settings', icon: Sliders, alwaysAccessible: true },
   { name: 'Profil', href: '/profil', icon: User, alwaysAccessible: true },
 ];
 
@@ -24,12 +32,59 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { isProfileComplete, completionPercentage, isLoading } = useProfile();
 
+  const renderNavItem = (item: any) => {
+    const isActive = pathname.startsWith(item.href);
+    const isLocked = !isLoading && !isProfileComplete && !item.alwaysAccessible;
+
+    if (isLocked) {
+      return (
+        <div
+          key={item.name}
+          className={cn(
+            "flex items-center rounded-xl text-sm transition-all duration-200 group relative overflow-hidden cursor-not-allowed",
+            isCollapsed ? "justify-center py-3" : "py-3 px-3 gap-3",
+            "text-slate-600 opacity-50"
+          )}
+          title={isCollapsed ? `${item.name} — Remplis ton profil` : "Remplis ton profil pour débloquer"}
+        >
+          <item.icon className="h-5 w-5 shrink-0 text-slate-600" />
+          {!isCollapsed && (
+            <>
+              <span className="flex-1 font-medium">{item.name}</span>
+              <Lock className="h-3.5 w-3.5 text-slate-600" />
+            </>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        key={item.name}
+        href={item.href}
+        className={cn(
+          "flex items-center rounded-xl text-sm transition-all duration-200 group relative overflow-hidden",
+          isCollapsed ? "justify-center py-3" : "py-3 px-3 gap-3",
+          isActive 
+            ? "bg-orange-500/10 text-orange-400 font-bold" 
+            : "text-slate-400 hover:text-white hover:bg-slate-800/50 font-medium"
+        )}
+        title={isCollapsed ? item.name : undefined}
+      >
+        {isActive && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-orange-500 rounded-r-full" />
+        )}
+        <item.icon className={cn("h-5 w-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-orange-500" : "text-slate-400")} />
+        {!isCollapsed && <span>{item.name}</span>}
+      </Link>
+    );
+  };
+
   return (
     <aside className={cn(
       "hidden md:flex flex-col border-r border-slate-800 bg-slate-900 py-8 transition-all duration-300 relative z-20 shadow-xl",
       isCollapsed ? "w-20 px-2" : "w-64 px-4"
     )}>
-      {/* ... (toggle button and logo) ... */}
       <Button 
         variant="ghost" 
         size="icon" 
@@ -47,53 +102,18 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1.5 overflow-y-auto custom-scrollbar pr-1">
-        {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
-          const isLocked = !isLoading && !isProfileComplete && !item.alwaysAccessible;
-
-          if (isLocked) {
-            return (
-              <div
-                key={item.name}
-                className={cn(
-                  "flex items-center rounded-xl text-sm transition-all duration-200 group relative overflow-hidden cursor-not-allowed",
-                  isCollapsed ? "justify-center py-3" : "py-3 px-3 gap-3",
-                  "text-slate-600 opacity-50"
-                )}
-                title={isCollapsed ? `${item.name} — Remplis ton profil` : "Remplis ton profil pour débloquer"}
-              >
-                <item.icon className="h-5 w-5 shrink-0 text-slate-600" />
-                {!isCollapsed && (
-                  <>
-                    <span className="flex-1">{item.name}</span>
-                    <Lock className="h-3.5 w-3.5 text-slate-600" />
-                  </>
-                )}
-              </div>
-            );
-          }
-
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "flex items-center rounded-xl text-sm transition-all duration-200 group relative overflow-hidden",
-                isCollapsed ? "justify-center py-3" : "py-3 px-3 gap-3",
-                isActive 
-                  ? "bg-orange-500/10 text-orange-400 font-bold" 
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/50 font-medium"
-              )}
-              title={isCollapsed ? item.name : undefined}
-            >
-              {isActive && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-orange-500 rounded-r-full" />
-              )}
-              <item.icon className={cn("h-5 w-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-orange-500" : "text-slate-400")} />
-              {!isCollapsed && <span>{item.name}</span>}
-            </Link>
-          );
-        })}
+        <div className="space-y-1.5">
+          {mainItems.map(renderNavItem)}
+        </div>
+        
+        <div className="pt-8 mt-8 border-t border-slate-800/50 space-y-1.5">
+          {!isCollapsed && (
+            <div className="px-3 mb-2">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Configuration</span>
+            </div>
+          )}
+          {footerItems.map(renderNavItem)}
+        </div>
       </nav>
       
       {!isCollapsed && (
@@ -117,7 +137,7 @@ export function Sidebar() {
           <div className="bg-gradient-to-br from-slate-800 to-slate-800/50 border border-slate-700/50 p-4 rounded-2xl relative overflow-hidden">
             <div className="absolute -right-4 -top-4 w-16 h-16 bg-orange-500/20 blur-xl rounded-full" />
             <p className="text-xs text-slate-400 font-bold mb-1 uppercase tracking-wider">L'Étudiant</p>
-            <p className="text-sm font-medium text-white">Édition Hackathon Vertex AI</p>
+            <p className="text-sm font-medium text-white">Hackathon Vertex AI</p>
           </div>
         </div>
       )}

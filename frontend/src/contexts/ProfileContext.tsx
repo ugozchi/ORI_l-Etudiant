@@ -17,6 +17,7 @@ interface ProfileContextType {
   isProfileComplete: boolean;
   completionPercentage: number;
   isLoading: boolean;
+  updateProfileLocally: (data: Partial<ProfileData>) => void;
   refreshProfile: () => Promise<void>;
 }
 
@@ -25,6 +26,7 @@ const ProfileContext = createContext<ProfileContextType>({
   isProfileComplete: false,
   completionPercentage: 0,
   isLoading: true,
+  updateProfileLocally: () => {},
   refreshProfile: async () => {},
 });
 
@@ -68,13 +70,28 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     if (!profileData) return 0;
     
     let score = 0;
-    if (profileData.name) score += 25;
-    if (profileData.city) score += 25;
-    if (profileData.level) score += 25;
-    if (profileData.interests && profileData.interests.length > 0) score += 25;
+    // Identité (30%)
+    if (profileData.name) score += 10;
+    if (profileData.city) score += 10;
+    if (profileData.level) score += 10;
     
-    return score;
+    // Intérêts (20%)
+    if (profileData.interests && profileData.interests.length > 0) score += 20;
+    
+    // Profil Cognitif / Jeux (50%)
+    if (profileData.strengths && profileData.strengths.length > 0) {
+      score += 50;
+    } else if (profileData.temp_game_progress) {
+      // Progression temporaire pendant les jeux (stockée en local ou via API)
+      score += Math.floor(profileData.temp_game_progress * 50);
+    }
+    
+    return Math.min(100, score);
   }, [profileData]);
+
+  const updateProfileLocally = useCallback((data: Partial<ProfileData>) => {
+    setProfileData(prev => prev ? { ...prev, ...data } : data as ProfileData);
+  }, []);
 
   const isProfileComplete = completionPercentage === 100;
 
@@ -84,6 +101,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       isProfileComplete, 
       completionPercentage,
       isLoading, 
+      updateProfileLocally,
       refreshProfile: fetchProfile 
     }}>
       {children}
