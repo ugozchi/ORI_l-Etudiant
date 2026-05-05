@@ -102,6 +102,20 @@ export default function ProfilePage() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Timer effect
+  useEffect(() => {
+    let interval: any;
+    if (step === 2 && gameIndex < 3 && gameTimer > 0) {
+      interval = setInterval(() => {
+        setGameTimer(prev => prev - 1);
+      }, 1000);
+    }
+    if (gameTimer === 0 && step === 2) {
+      advanceBlock(3); // Time's up -> results
+    }
+    return () => clearInterval(interval);
+  }, [step, gameIndex, gameTimer]);
+
   // Load Profile
   useEffect(() => {
     if (profileData) {
@@ -109,9 +123,6 @@ export default function ProfilePage() {
       setCity(profileData.city || '');
       setLevel(profileData.level || '');
       setInterests(profileData.interests || []);
-      if (profileData.name && step === 1) {
-        // If profile already exists, we might want to skip or just pre-fill
-      }
     }
   }, [profileData]);
 
@@ -226,10 +237,14 @@ export default function ProfilePage() {
   };
 
   const calculateFinalStrengths = () => {
-    const p = Math.min(100, 30 + (scores.softSkills.pragmatism * 10));
-    const c = Math.min(100, 25 + (scores.softSkills.creativity * 10));
-    const l = Math.min(100, 20 + (scores.softSkills.leadership * 10));
-    const e = Math.min(100, 35 + (scores.softSkills.empathy * 10));
+    // Strict normalization: Max points expected around 10-15 per trait
+    const normalize = (val: number) => Math.min(100, Math.floor((val / 15) * 100));
+    
+    const p = normalize(scores.softSkills.pragmatism);
+    const c = normalize(scores.softSkills.creativity);
+    const l = normalize(scores.softSkills.leadership);
+    const e = normalize(scores.softSkills.empathy);
+    
     const res = [
       { name: 'Pragmatisme', val: p },
       { name: 'Créativité', val: c },
@@ -538,12 +553,12 @@ export default function ProfilePage() {
                       </div>
                       <div className="space-y-6 flex flex-col justify-center">
                         <div className="space-y-2">
-                          <div className="flex justify-between items-end"><span className="font-bold text-slate-700 flex items-center gap-2 text-sm"><BrainCircuit className="w-4 h-4 text-blue-500" /> Logique & Mémoire</span><span className="text-sm font-black text-blue-600">{Math.min(100, scores.logic * 10)}%</span></div>
-                          <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, scores.logic * 10)}%` }} className="h-full bg-blue-500" /></div>
+                          <div className="flex justify-between items-end"><span className="font-bold text-slate-700 flex items-center gap-2 text-sm"><BrainCircuit className="w-4 h-4 text-blue-500" /> Logique & Mémoire</span><span className="text-sm font-black text-blue-600">{Math.min(100, scores.logic * 4)}%</span></div>
+                          <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, scores.logic * 4)}%` }} className="h-full bg-blue-500" /></div>
                         </div>
                         <div className="space-y-2">
-                          <div className="flex justify-between items-end"><span className="font-bold text-slate-700 flex items-center gap-2 text-sm"><Zap className="w-4 h-4 text-pink-500" /> Mathématiques</span><span className="text-sm font-black text-pink-600">{Math.min(100, scores.math * 8)}%</span></div>
-                          <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, scores.math * 8)}%` }} className="h-full bg-pink-500" /></div>
+                          <div className="flex justify-between items-end"><span className="font-bold text-slate-700 flex items-center gap-2 text-sm"><Zap className="w-4 h-4 text-pink-500" /> Mathématiques</span><span className="text-sm font-black text-pink-600">{Math.min(100, scores.math * 3)}%</span></div>
+                          <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, scores.math * 3)}%` }} className="h-full bg-pink-500" /></div>
                         </div>
                         <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl">
                           <p className="text-xs text-orange-800 font-bold mb-1 flex items-center gap-1"><Trophy className="w-3 h-3" /> Analyse Personnalité</p>

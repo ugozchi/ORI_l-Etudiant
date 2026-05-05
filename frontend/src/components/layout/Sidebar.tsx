@@ -137,7 +137,7 @@ export function Sidebar() {
           <div className="bg-gradient-to-br from-slate-800 to-slate-800/50 border border-slate-700/50 p-4 rounded-2xl relative overflow-hidden">
             <div className="absolute -right-4 -top-4 w-16 h-16 bg-orange-500/20 blur-xl rounded-full" />
             <p className="text-xs text-slate-400 font-bold mb-1 uppercase tracking-wider">L'Étudiant</p>
-            <p className="text-sm font-medium text-white">Hackathon Vertex AI</p>
+            <p className="text-sm font-medium text-white">Alberthon</p>
           </div>
         </div>
       )}
