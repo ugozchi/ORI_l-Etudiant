@@ -19,7 +19,6 @@ const mainItems = [
   { name: 'Salons', href: '/salons', icon: Users, alwaysAccessible: false },
   { name: 'Newsletter', href: '/newsletter', icon: Newspaper, alwaysAccessible: false },
   { name: 'Docs', href: '/docs', icon: FileText, alwaysAccessible: false },
-  { name: 'Passport', href: '/passport', icon: Compass, alwaysAccessible: false },
 ];
 
 const footerItems = [

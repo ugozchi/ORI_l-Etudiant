@@ -526,22 +526,69 @@ export default function SalonsPage() {
               )}
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
+            <div className="mt-8 space-y-4">
               <h3 className="text-lg font-black text-slate-900 flex items-center gap-2 mb-3">
-                <Ticket className="w-5 h-5 text-orange-500" /> Mes commandes
+                <Ticket className="w-5 h-5 text-orange-500" /> Mes Places de Salons
               </h3>
               {tickets.length === 0 ? (
-                <p className="text-sm text-slate-500">Aucune place commandee pour l'instant.</p>
+                <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
+                  <p className="text-sm text-slate-500">Aucune place commandée pour l'instant. Liker des salons te permet de les commander ici.</p>
+                </div>
               ) : (
-                <div className="space-y-2">
-                  {tickets.map((t) => (
-                    <div key={t.ticket_id} className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
-                      <div>
-                        <p className="font-bold text-slate-900">{t.fair_name}</p>
-                        <p className="text-xs text-slate-500">{t.city} - {t.date} - x{t.quantity}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {tickets.map((ticket) => (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      key={ticket.ticket_id} 
+                      className="bg-white rounded-[2rem] overflow-hidden shadow-lg border border-slate-200 flex flex-col relative"
+                    >
+                      {/* Ticket Header */}
+                      <div className="bg-slate-900 p-5 text-white flex justify-between items-start relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+                        <div className="relative z-10">
+                          <span className="bg-white/10 text-orange-400 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md mb-2 inline-block border border-orange-500/30">VIP Access</span>
+                          <h4 className="font-black text-xl leading-tight line-clamp-1">{ticket.fair_name}</h4>
+                        </div>
                       </div>
-                      <p className="font-black text-slate-900">{t.total_price_eur.toFixed(2)} EUR</p>
-                    </div>
+                      
+                      {/* Ticket Body (Perforation effect) */}
+                      <div className="bg-white p-5 flex flex-col relative flex-1">
+                        <div className="absolute top-0 left-4 right-4 border-t-2 border-dashed border-slate-200 -mt-px" />
+                        {/* Perforation holes */}
+                        <div className="absolute top-0 left-0 w-4 h-4 bg-slate-50 rounded-full -translate-x-1/2 -translate-y-1/2 border-r border-b border-slate-200" />
+                        <div className="absolute top-0 right-0 w-4 h-4 bg-slate-50 rounded-full translate-x-1/2 -translate-y-1/2 border-l border-b border-slate-200" />
+                        
+                        <div className="flex justify-between items-center mb-4">
+                          <div>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Lieu & Date</p>
+                            <p className="text-sm text-slate-700 font-bold">{ticket.city}</p>
+                            <p className="text-sm text-slate-700 font-bold">{ticket.date}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Quantité</p>
+                            <p className="text-sm text-slate-700 font-black">x{ticket.quantity}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-auto">
+                          <div className="flex-1 pr-4">
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Ticket ID</p>
+                            <p className="text-xs text-slate-500 font-mono bg-slate-50 px-2 py-1 rounded border border-slate-100 truncate w-full overflow-hidden text-ellipsis">{ticket.ticket_id}</p>
+                          </div>
+                          
+                          {/* Ticket QR Code */}
+                          <div className="w-20 h-20 bg-white p-1 rounded-xl shadow-sm border border-slate-200 shrink-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img 
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ticket.ticket_id)}&color=0f172a&bgcolor=ffffff`} 
+                              alt="Ticket QR" 
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
