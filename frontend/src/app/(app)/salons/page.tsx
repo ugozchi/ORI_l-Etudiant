@@ -581,7 +581,7 @@ export default function SalonsPage() {
                           <div className="w-20 h-20 bg-white p-1 rounded-xl shadow-sm border border-slate-200 shrink-0">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img 
-                              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ticket.ticket_id)}&color=0f172a&bgcolor=ffffff`} 
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/p/${userId}` : '')}&color=0f172a&bgcolor=ffffff`} 
                               alt="Ticket QR" 
                               className="w-full h-full object-contain"
                             />
