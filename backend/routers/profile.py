@@ -25,7 +25,22 @@ class Profile(BaseModel):
 def create_or_update_profile(profile: Profile):
     """Crée ou met à jour un profil dans Supabase."""
     profile_dict = profile.model_dump()
-    supabase_client.table("profiles").upsert(profile_dict, on_conflict="user_id").execute()
+    try:
+        # Full payload (new schema)
+        supabase_client.table("profiles").upsert(profile_dict, on_conflict="user_id").execute()
+    except Exception:
+        # Fallback payload (older schema compatibility)
+        fallback_payload = {
+            "user_id": profile_dict.get("user_id"),
+            "name": profile_dict.get("name", ""),
+            "city": profile_dict.get("city", ""),
+            "level": profile_dict.get("level", ""),
+            "interests": profile_dict.get("interests", []),
+            "strengths": profile_dict.get("strengths", []),
+            "mobility": profile_dict.get("mobility", False),
+            "target_diploma": profile_dict.get("target_diploma"),
+        }
+        supabase_client.table("profiles").upsert(fallback_payload, on_conflict="user_id").execute()
     return {"status": "success", "data": profile_dict}
 
 @router.get("/{user_id}")
