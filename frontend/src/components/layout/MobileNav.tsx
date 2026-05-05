@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { MessageCircle, User, Users, Compass, Route, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/contexts/ProfileContext';
+import { motion } from 'framer-motion';
 
 const mobileNavItems = [
   { name: 'Chat', href: '/chat', icon: MessageCircle, alwaysAccessible: true },
@@ -16,10 +17,19 @@ const mobileNavItems = [
 
 export function MobileNav() {
   const pathname = usePathname();
-  const { isProfileComplete, isLoading } = useProfile();
+  const { isProfileComplete, completionPercentage, isLoading } = useProfile();
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 px-2 pb-safe">
+      {!isProfileComplete && (
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-slate-100 overflow-hidden">
+          <motion.div 
+            initial={{ width: 0 }}
+            animate={{ width: `${completionPercentage}%` }}
+            className="h-full bg-orange-500"
+          />
+        </div>
+      )}
       <div className="flex items-center justify-around h-16">
         {mobileNavItems.map((item) => {
           const isActive = pathname.startsWith(item.href);

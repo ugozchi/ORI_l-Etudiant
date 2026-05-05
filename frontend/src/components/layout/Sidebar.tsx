@@ -7,6 +7,7 @@ import { MessageCircle, User, Users, Newspaper, FileText, Compass, ChevronLeft, 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/contexts/ProfileContext';
+import { motion } from 'framer-motion';
 
 const navItems = [
   { name: 'Chat', href: '/chat', icon: MessageCircle, alwaysAccessible: true },
@@ -21,14 +22,14 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { isProfileComplete, isLoading } = useProfile();
+  const { isProfileComplete, completionPercentage, isLoading } = useProfile();
 
   return (
     <aside className={cn(
       "hidden md:flex flex-col border-r border-slate-800 bg-slate-900 py-8 transition-all duration-300 relative z-20 shadow-xl",
       isCollapsed ? "w-20 px-2" : "w-64 px-4"
     )}>
-      {/* Toggle Button */}
+      {/* ... (toggle button and logo) ... */}
       <Button 
         variant="ghost" 
         size="icon" 
@@ -45,7 +46,7 @@ export function Sidebar() {
         {!isCollapsed && <span className="text-2xl font-black tracking-tight text-white transition-opacity duration-300">ORI</span>}
       </div>
 
-      <nav className="flex-1 space-y-1.5">
+      <nav className="flex-1 space-y-1.5 overflow-y-auto custom-scrollbar pr-1">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           const isLocked = !isLoading && !isProfileComplete && !item.alwaysAccessible;
@@ -96,7 +97,23 @@ export function Sidebar() {
       </nav>
       
       {!isCollapsed && (
-        <div className="mt-auto px-2 py-4">
+        <div className="mt-auto px-2 py-4 space-y-4">
+          {!isProfileComplete && (
+            <div className="px-2">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Profil</span>
+                <span className="text-[10px] font-black text-orange-500">{completionPercentage}%</span>
+              </div>
+              <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden border border-slate-700/30">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${completionPercentage}%` }}
+                  className="h-full bg-gradient-to-r from-orange-600 to-orange-400 rounded-full shadow-[0_0_8px_rgba(249,115,22,0.4)]"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="bg-gradient-to-br from-slate-800 to-slate-800/50 border border-slate-700/50 p-4 rounded-2xl relative overflow-hidden">
             <div className="absolute -right-4 -top-4 w-16 h-16 bg-orange-500/20 blur-xl rounded-full" />
             <p className="text-xs text-slate-400 font-bold mb-1 uppercase tracking-wider">L'Étudiant</p>

@@ -32,7 +32,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const { isProfileComplete } = useProfile();
+  const { isProfileComplete, completionPercentage } = useProfile();
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
@@ -120,7 +120,12 @@ export default function ChatPage() {
     
     if (msgs.length === 0) {
       const welcomeContent = !isProfileComplete
-        ? "Salut ! 👋 Je suis **ORI**, ton conseiller d'orientation propulsé par l'IA.\n\nAvant de commencer, j'ai besoin de mieux te connaître. Tu peux :\n\n**→ Compléter ton profil** pour que je puisse te faire des recommandations personnalisées\n\n**→ Ou me poser directement une question** sur ton orientation !"
+        ? `Salut ! 👋 Je suis **ORI**, ton conseiller d'orientation propulsé par l'IA.
+
+Ton profil est actuellement rempli à **${completionPercentage}%**. Pour que je puisse te faire des recommandations vraiment personnalisées, j'ai besoin que tu le complètes !
+
+**→ Compléter mon profil**
+**→ Ou me poser directement une question**`
         : "Rebonjour ! 👋 Je suis ORI, ton conseiller d'orientation. Comment puis-je t'aider aujourd'hui ?";
       
       return [{

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
 interface ProfileData {
@@ -15,6 +15,7 @@ interface ProfileData {
 interface ProfileContextType {
   profileData: ProfileData | null;
   isProfileComplete: boolean;
+  completionPercentage: number;
   isLoading: boolean;
   refreshProfile: () => Promise<void>;
 }
@@ -22,6 +23,7 @@ interface ProfileContextType {
 const ProfileContext = createContext<ProfileContextType>({
   profileData: null,
   isProfileComplete: false,
+  completionPercentage: 0,
   isLoading: true,
   refreshProfile: async () => {},
 });
@@ -62,17 +64,28 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     fetchProfile();
   }, [fetchProfile]);
 
-  const isProfileComplete = !!(
-    profileData &&
-    profileData.name &&
-    profileData.city &&
-    profileData.level &&
-    profileData.interests &&
-    profileData.interests.length > 0
-  );
+  const completionPercentage = useMemo(() => {
+    if (!profileData) return 0;
+    
+    let score = 0;
+    if (profileData.name) score += 25;
+    if (profileData.city) score += 25;
+    if (profileData.level) score += 25;
+    if (profileData.interests && profileData.interests.length > 0) score += 25;
+    
+    return score;
+  }, [profileData]);
+
+  const isProfileComplete = completionPercentage === 100;
 
   return (
-    <ProfileContext.Provider value={{ profileData, isProfileComplete, isLoading, refreshProfile: fetchProfile }}>
+    <ProfileContext.Provider value={{ 
+      profileData, 
+      isProfileComplete, 
+      completionPercentage,
+      isLoading, 
+      refreshProfile: fetchProfile 
+    }}>
       {children}
     </ProfileContext.Provider>
   );

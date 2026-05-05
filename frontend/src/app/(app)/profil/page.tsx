@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { User, MapPin, GraduationCap, Sparkles, UploadCloud, ChevronRight, Loader2, FileText, CheckCircle2, Target, BrainCircuit, Rocket, Activity, Send, Timer, Brain, Palette, Zap, CheckCircle, BarChart3, FastForward } from 'lucide-react';
+import { User, MapPin, GraduationCap, Sparkles, UploadCloud, ChevronRight, Loader2, FileText, CheckCircle2, Target, BrainCircuit, Rocket, Activity, Send, Timer, Brain, Palette, Zap, CheckCircle, BarChart3, FastForward, Trophy, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/utils/supabase/client';
@@ -16,12 +16,33 @@ const INTERESTS_LIST = [
 const LEVELS = ["Seconde", "Première", "Terminale", "Bac+1", "Bac+2", "Bac+3"];
 
 const BEHAVIOR_SITS = [
-  { sit: "Face à un problème complexe :", opts: ["J'analyse chaque détail méthodiquement", "Je teste une solution rapidement au feeling"] },
-  { sit: "En travail d'équipe :", opts: ["Je prends le lead et distribue les rôles", "Je m'assure que tout le monde est écouté"] },
-  { sit: "Pour rendre un projet étudiant :", opts: ["Je suis très organisé à l'avance", "Je suis ultra efficace à la dernière minute"] },
-  { sit: "Dans un débat d'idées :", opts: ["J'utilise des faits et des chiffres", "Je joue sur l'émotion et l'inspiration"] },
-  { sit: "Face à l'échec :", opts: ["Je cherche à comprendre pourquoi rationnellement", "Je passe vite à autre chose de plus motivant"] },
-  { sit: "Quand on me donne une consigne floue :", opts: ["Je pose plein de questions pour clarifier", "J'interprète et je propose ma vision"] }
+  { 
+    sit: "Ton équipe est bloquée sur un bug à 2h du rendu final.", 
+    opts: [
+      { text: "Je tranche les décisions pour avancer coûte que coûte.", traits: { leadership: 3, pragmatism: 1 } },
+      { text: "Je propose une approche créative pour contourner le bug.", traits: { creativity: 3 } },
+      { text: "Je m'assure que le moral de l'équipe reste positif.", traits: { empathy: 3 } },
+      { text: "Je documente la solution pour éviter que ça se reproduise.", traits: { pragmatism: 3 } }
+    ] 
+  },
+  { 
+    sit: "On te propose un projet ambitieux mais très risqué.", 
+    opts: [
+      { text: "J'analyse froidement les risques et les bénéfices.", traits: { pragmatism: 3 } },
+      { text: "Je fonce, c'est l'occasion d'innover radicalement !", traits: { creativity: 3, leadership: 1 } },
+      { text: "Je demande l'avis de tous avant de me décider.", traits: { empathy: 3 } },
+      { text: "Je prends la responsabilité de mener l'équipe au succès.", traits: { leadership: 3 } }
+    ] 
+  },
+  { 
+    sit: "Un collègue est en retard et ralentit tout le groupe.", 
+    opts: [
+      { text: "Je lui propose mon aide pour qu'il rattrape son retard.", traits: { empathy: 3 } },
+      { text: "Je réorganise le planning pour compenser son absence.", traits: { leadership: 3, pragmatism: 1 } },
+      { text: "Je cherche une méthode plus simple pour finir sa partie.", traits: { creativity: 3, pragmatism: 1 } },
+      { text: "Je lui rappelle fermement les objectifs et les délais.", traits: { pragmatism: 3, leadership: 1 } }
+    ] 
+  }
 ];
 
 export default function ProfilePage() {
@@ -36,18 +57,38 @@ export default function ProfilePage() {
   const [city, setCity] = useState('');
   const [level, setLevel] = useState('');
   const [interests, setInterests] = useState<string[]>([]);
-  const [strengths, setStrengths] = useState([{ name: 'Rigueur', val: 70 }, { name: 'Créativité', val: 50 }, { name: 'Logique', val: 80 }]);
+  const [strengths, setStrengths] = useState([
+    { name: 'Pragmatisme', val: 0 }, 
+    { name: 'Créativité', val: 0 }, 
+    { name: 'Leadership', val: 0 },
+    { name: 'Empathie', val: 0 }
+  ]);
   
   // Games Arcade state
-  const [gameIndex, setGameIndex] = useState(0); // 0: Colors, 1: Math, 2: Behavior, 3: Results
-  const [gameTimer, setGameTimer] = useState(300); // 5 mins per block
-  const [scores, setScores] = useState({ logic: 0, math: 0, behavior: 0 });
-  const [levels, setLevels] = useState({ logic: 0, math: 0, behavior: 0 });
+  const [gameIndex, setGameIndex] = useState(0); // 0: Logic/Mem, 1: Math/Res, 2: Soft Skills, 3: Results
+  const [subGame, setSubGame] = useState<'A' | 'B'>('A');
+  const [gameTimer, setGameTimer] = useState(300);
+  const [scores, setScores] = useState({ 
+    logic: 0, 
+    math: 0, 
+    softSkills: { pragmatism: 0, creativity: 0, leadership: 0, empathy: 0 } 
+  });
 
-  // Game 1: Dynamic Colors
-  const [colorGame, setColorGame] = useState({ gridSize: 2, baseColor: '', intruderColor: '', intruderIndex: 0 });
+  // Game States
+  // 1A: Spatial Memory
+  const [memoryGrid, setMemoryGrid] = useState<{ size: number, pattern: number[], selected: number[], phase: 'show' | 'input' }>({
+    size: 3, pattern: [], selected: [], phase: 'show'
+  });
+  // 1B: Logical Sequences
+  const [sequenceGame, setSequenceGame] = useState<{ seq: string, ans: number[], correct: number }>({
+    seq: '', ans: [], correct: 0
+  });
+  // 2B: Missing Operator
+  const [operatorGame, setOperatorGame] = useState<{ eq: string, correct: string }>({
+    eq: '', correct: ''
+  });
   
-  // Game 2: Dynamic Math
+  // Game 2A: Dynamic Math
   const [mathGame, setMathGame] = useState({ eq: '', ans: [0,0,0,0], correct: 0 });
   
   // Game 3: Behavior
@@ -55,7 +96,7 @@ export default function ProfilePage() {
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<{role: 'ori'|'user', content: string}[]>([
-    { role: 'ori', content: "Impressionnant ! Tes réflexes et ta logique visuelle sont excellents. Pour affiner, quel est ton domaine de rêve aujourd'hui ?" }
+    { role: 'ori', content: "Incroyable ! Ton profil cognitif commence à se dessiner. Pour affiner mon analyse, quel est ton projet professionnel de rêve ?" }
   ]);
   const [chatInput, setChatInput] = useState('');
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -95,58 +136,80 @@ export default function ProfilePage() {
     fetchProfile();
     
     // Initialize first games
-    generateColorGame(0);
+    generateMemoryGame(3);
     generateMathGame(0);
   }, [supabase]);
 
   // GAME LOGIC GENERATORS =================================
 
-  const generateColorGame = (level: number) => {
-    const size = Math.min(2 + Math.floor(level / 3), 5); // Starts 2x2, max 5x5
+  const formatTimer = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const generateMemoryGame = (size: number) => {
     const numCells = size * size;
-    const hue = Math.floor(Math.random() * 360);
-    // Difficulty: lightness diff gets smaller
-    const diff = Math.max(25 - level * 3, 4); 
-    const baseL = 50;
-    const intrL = baseL + diff;
-    
-    setColorGame({
-      gridSize: size,
-      baseColor: `hsl(${hue}, 80%, ${baseL}%)`,
-      intruderColor: `hsl(${hue}, 80%, ${intrL}%)`,
-      intruderIndex: Math.floor(Math.random() * numCells)
-    });
+    const count = size === 3 ? 3 : 5;
+    const pattern: number[] = [];
+    while (pattern.length < count) {
+      const r = Math.floor(Math.random() * numCells);
+      if (!pattern.includes(r)) pattern.push(r);
+    }
+    setMemoryGrid({ size, pattern, selected: [], phase: 'show' });
+    setTimeout(() => {
+      setMemoryGrid(prev => ({ ...prev, phase: 'input' }));
+    }, 1500);
+  };
+
+  const generateSequenceGame = (level: number) => {
+    let seq: number[] = [];
+    let correct = 0;
+    const type = Math.floor(Math.random() * 3);
+
+    if (type === 0) { // Arithmétique
+      const start = Math.floor(Math.random() * 10);
+      const step = Math.floor(Math.random() * 5) + 2;
+      seq = [start, start + step, start + step * 2, start + step * 3];
+      correct = start + step * 4;
+    } else if (type === 1) { // Géométrique
+      const start = Math.floor(Math.random() * 3) + 1;
+      const factor = 2;
+      seq = [start, start * factor, start * factor * factor, start * factor * factor * factor];
+      correct = seq[3] * factor;
+    } else { // Fibonacci-ish
+      seq = [1, 1, 2, 3, 5];
+      correct = 8;
+    }
+
+    const ans = [correct, correct + 2, correct - 2, correct * 2].sort(() => Math.random() - 0.5);
+    setSequenceGame({ seq: seq.join(', ') + ', ?', ans, correct });
+  };
+
+  const generateOperatorGame = () => {
+    const ops = ['+', '-', '×', '÷'];
+    const op = ops[Math.floor(Math.random() * ops.length)];
+    let a, b, res;
+
+    if (op === '+') { a = 12; b = 8; res = 20; }
+    else if (op === '-') { a = 25; b = 7; res = 18; }
+    else if (op === '×') { a = 6; b = 7; res = 42; }
+    else { a = 40; b = 8; res = 5; }
+
+    setOperatorGame({ eq: `${a} [?] ${b} = ${res}`, correct: op });
   };
 
   const generateMathGame = (level: number) => {
     let a, b, op, correct;
-    if (level < 3) { // Easy
-      a = Math.floor(Math.random() * 10) + 1;
-      b = Math.floor(Math.random() * 10) + 1;
-      op = '+';
-      correct = a + b;
-    } else if (level < 8) { // Medium
-      a = Math.floor(Math.random() * 9) + 2;
-      b = Math.floor(Math.random() * 9) + 2;
-      op = '×';
-      correct = a * b;
-    } else { // Hard
-      a = Math.floor(Math.random() * 50) + 10;
-      b = Math.floor(Math.random() * 50) + 10;
-      op = '+';
-      correct = a + b;
-    }
+    if (level < 3) { a = Math.floor(Math.random() * 12) + 2; b = Math.floor(Math.random() * 12) + 2; op = '+'; correct = a + b; }
+    else { a = Math.floor(Math.random() * 9) + 2; b = Math.floor(Math.random() * 9) + 2; op = '×'; correct = a * b; }
     
-    // Generate 3 wrong answers close to correct
     const ansSet = new Set<number>([correct]);
     while (ansSet.size < 4) {
-      let fake: number = correct + Math.floor(Math.random() * 14) - 7;
-      if (fake === correct || fake < 0) fake = correct + Math.floor(Math.random() * 5) + 1;
-      ansSet.add(fake);
+      const fake: number = correct + Math.floor(Math.random() * 10) - 5;
+      if (fake !== correct && fake > 0) ansSet.add(fake);
     }
-    const ansArr = Array.from(ansSet).sort(() => Math.random() - 0.5);
-    
-    setMathGame({ eq: `${a} ${op} ${b}`, ans: ansArr, correct });
+    setMathGame({ eq: `${a} ${op} ${b}`, ans: Array.from(ansSet).sort(() => Math.random() - 0.5), correct });
   };
 
   // Global Timer for current block
@@ -165,41 +228,95 @@ export default function ProfilePage() {
     }
   }, [step, gameIndex, gameTimer]);
 
-  const formatTimer = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
-
   const advanceBlock = (nextIndex: number) => {
-    setGameTimer(300); // Reset 5 mins
+    setGameTimer(300);
     setGameIndex(nextIndex);
+    setSubGame('A');
+    if (nextIndex === 0) generateMemoryGame(3);
+    if (nextIndex === 1) generateMathGame(0);
+    if (nextIndex === 3) calculateFinalStrengths();
   };
 
-  const handleColorClick = (isIntruder: boolean) => {
-    if (isIntruder) {
-      const newScore = scores.logic + 1;
-      setScores(s => ({ ...s, logic: newScore }));
-      generateColorGame(newScore); // Level goes up with score!
+  const calculateFinalStrengths = () => {
+    // Basic normalization for demo
+    const p = Math.min(100, 20 + (scores.softSkills.pragmatism * 10));
+    const c = Math.min(100, 20 + (scores.softSkills.creativity * 10));
+    const l = Math.min(100, 20 + (scores.softSkills.leadership * 10));
+    const e = Math.min(100, 20 + (scores.softSkills.empathy * 10));
+    
+    setStrengths([
+      { name: 'Pragmatisme', val: p },
+      { name: 'Créativité', val: c },
+      { name: 'Leadership', val: l },
+      { name: 'Empathie', val: e }
+    ]);
+  };
+
+  const handleMemoryClick = (idx: number) => {
+    if (memoryGrid.phase !== 'input') return;
+    if (memoryGrid.selected.includes(idx)) return;
+
+    const isCorrect = memoryGrid.pattern.includes(idx);
+    if (isCorrect) {
+      const newSelected = [...memoryGrid.selected, idx];
+      if (newSelected.length === memoryGrid.pattern.length) {
+        setScores(s => ({ ...s, logic: s.logic + 1 }));
+        setSubGame('B');
+        generateSequenceGame(scores.logic);
+      } else {
+        setMemoryGrid(prev => ({ ...prev, selected: newSelected }));
+      }
     } else {
-      // Small penalty or just new game without point? Just new game.
-      generateColorGame(scores.logic); 
+      generateMemoryGame(memoryGrid.size);
+    }
+  };
+
+  const handleSequenceClick = (ans: number) => {
+    if (ans === sequenceGame.correct) {
+      setScores(s => ({ ...s, logic: s.logic + 1 }));
+      setSubGame('A');
+      generateMemoryGame(scores.logic > 5 ? 4 : 3);
+    } else {
+      generateSequenceGame(scores.logic);
     }
   };
 
   const handleMathClick = (ans: number) => {
     if (ans === mathGame.correct) {
-      const newScore = scores.math + 1;
-      setScores(s => ({ ...s, math: newScore }));
-      generateMathGame(newScore);
+      setScores(s => ({ ...s, math: s.math + 1 }));
+      setSubGame('B');
+      generateOperatorGame();
     } else {
       generateMathGame(scores.math);
     }
   };
 
-  const handleBehClick = () => {
-    setScores(s => ({ ...s, behavior: s.behavior + 1 }));
-    setBehIdx((prev) => (prev + 1) % BEHAVIOR_SITS.length);
+  const handleOperatorClick = (op: string) => {
+    if (op === operatorGame.correct) {
+      setScores(s => ({ ...s, math: s.math + 1 }));
+      setSubGame('A');
+      generateMathGame(scores.math);
+    } else {
+      generateOperatorGame();
+    }
+  };
+
+  const handleBehClick = (traits: any) => {
+    setScores(s => ({ 
+      ...s, 
+      softSkills: {
+        pragmatism: s.softSkills.pragmatism + (traits.pragmatism || 0),
+        creativity: s.softSkills.creativity + (traits.creativity || 0),
+        leadership: s.softSkills.leadership + (traits.leadership || 0),
+        empathy: s.softSkills.empathy + (traits.empathy || 0),
+      }
+    }));
+    
+    if (behIdx < BEHAVIOR_SITS.length - 1) {
+      setBehIdx(prev => prev + 1);
+    } else {
+      advanceBlock(3);
+    }
   };
 
   // ========================================================
@@ -429,73 +546,114 @@ export default function ProfilePage() {
                   </>
                 )}
 
-                {/* Game 1: Colors */}
+                {/* Game 1: Logic & Memory */}
                 {gameIndex === 0 && (
-                  <div className="p-8 md:p-12 text-center relative">
-                    <div className="absolute top-4 right-6 text-sm font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full">Score: {scores.logic}</div>
-                    <h2 className="text-2xl font-black text-slate-900 mb-2">L'Œil de Lynx</h2>
-                    <p className="text-slate-500 mb-8 font-medium">Trouve le carré différent. La difficulté augmente !</p>
+                  <div className="p-8 md:p-12 text-center relative flex-1 flex flex-col justify-center">
+                    <div className="absolute top-4 right-6 text-sm font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full">Niveau {scores.logic}</div>
                     
-                    <div 
-                      className="grid gap-2 w-72 h-72 mx-auto"
-                      style={{ gridTemplateColumns: `repeat(${colorGame.gridSize}, minmax(0, 1fr))` }}
-                    >
-                      {[...Array(colorGame.gridSize * colorGame.gridSize)].map((_, i) => (
+                    {subGame === 'A' ? (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} key="mem">
+                        <h2 className="text-2xl font-black text-slate-900 mb-2">Mémoire Spatiale</h2>
+                        <p className="text-slate-500 mb-8 font-medium">Mémorise le motif puis reproduis-le.</p>
                         <div 
-                          key={i}
-                          onClick={() => handleColorClick(i === colorGame.intruderIndex)}
-                          className="rounded-xl cursor-pointer hover:scale-[1.02] active:scale-95 transition-transform shadow-sm w-full h-full"
-                          style={{ backgroundColor: i === colorGame.intruderIndex ? colorGame.intruderColor : colorGame.baseColor }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Game 2: Math */}
-                {gameIndex === 1 && (
-                  <div className="p-8 md:p-12 text-center relative">
-                    <div className="absolute top-4 right-6 text-sm font-bold text-pink-500 bg-pink-50 px-3 py-1 rounded-full">Score: {scores.math}</div>
-                    <h2 className="text-2xl font-black text-slate-900 mb-2">Calcul Express</h2>
-                    <p className="text-slate-500 mb-8 font-medium">Résous ces calculs. Le niveau augmente !</p>
-                    
-                    <div className="text-5xl font-black text-slate-800 flex items-center justify-center h-32 mb-8 bg-slate-50 rounded-2xl border border-slate-100 max-w-sm mx-auto shadow-inner tracking-widest">
-                      {mathGame.eq}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
-                      {mathGame.ans.map((ans, i) => (
-                        <button 
-                          key={i}
-                          onClick={() => handleMathClick(ans)}
-                          className="bg-white border-2 border-slate-200 text-2xl font-bold py-5 rounded-xl hover:border-pink-500 hover:text-pink-500 hover:bg-pink-50 active:scale-95 transition-all shadow-sm"
+                          className="grid gap-2 mx-auto w-64 h-64"
+                          style={{ gridTemplateColumns: `repeat(${memoryGrid.size}, minmax(0, 1fr))` }}
                         >
-                          {ans}
-                        </button>
-                      ))}
-                    </div>
+                          {[...Array(memoryGrid.size * memoryGrid.size)].map((_, i) => (
+                            <motion.div 
+                              key={i}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleMemoryClick(i)}
+                              className={cn(
+                                "rounded-xl border-2 transition-all cursor-pointer",
+                                memoryGrid.phase === 'show' && memoryGrid.pattern.includes(i) ? "bg-blue-500 border-blue-400" :
+                                memoryGrid.phase === 'input' && memoryGrid.selected.includes(i) ? "bg-blue-500 border-blue-400" :
+                                "bg-white border-slate-100 hover:border-blue-200"
+                              )}
+                            />
+                          ))}
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} key="seq">
+                        <h2 className="text-2xl font-black text-slate-900 mb-2">Suite Logique</h2>
+                        <p className="text-slate-500 mb-8 font-medium">Quel est le prochain nombre dans la suite ?</p>
+                        <div className="text-4xl font-black text-blue-600 mb-10 tracking-widest bg-blue-50 p-6 rounded-2xl inline-block border border-blue-100">
+                          {sequenceGame.seq}
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
+                          {sequenceGame.ans.map((a, i) => (
+                            <Button key={i} variant="outline" onClick={() => handleSequenceClick(a)} className="h-14 rounded-xl text-xl font-bold border-slate-200 hover:border-blue-500 hover:text-blue-500">
+                              {a}
+                            </Button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
                 )}
 
-                {/* Game 3: Behavior */}
-                {gameIndex === 2 && (
-                  <div className="p-8 md:p-12 text-center relative">
-                    <div className="absolute top-4 right-6 text-sm font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full">Score: {scores.behavior}</div>
-                    <h2 className="text-2xl font-black text-slate-900 mb-2">Mise en situation</h2>
-                    <p className="text-slate-500 mb-8 font-medium">Choisis l'action qui te correspond le plus au quotidien.</p>
+                {/* Game 2: Math & Resolution */}
+                {gameIndex === 1 && (
+                  <div className="p-8 md:p-12 text-center relative flex-1 flex flex-col justify-center">
+                    <div className="absolute top-4 right-6 text-sm font-bold text-pink-500 bg-pink-50 px-3 py-1 rounded-full">Niveau {scores.math}</div>
                     
-                    <div className="text-xl font-black text-slate-800 p-6 mb-8 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner">
+                    {subGame === 'A' ? (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} key="calc">
+                        <h2 className="text-2xl font-black text-slate-900 mb-2">Calcul Mental</h2>
+                        <p className="text-slate-500 mb-8 font-medium">Résous cette équation le plus vite possible.</p>
+                        <div className="text-5xl font-black text-slate-800 h-32 flex items-center justify-center mb-8 bg-slate-50 rounded-2xl border border-slate-100 max-w-sm mx-auto shadow-inner tracking-widest">
+                          {mathGame.eq}
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
+                          {mathGame.ans.map((ans, i) => (
+                            <button key={i} onClick={() => handleMathClick(ans)} className="bg-white border-2 border-slate-200 text-2xl font-bold py-5 rounded-xl hover:border-pink-500 hover:text-pink-500 hover:bg-pink-50 active:scale-95 transition-all shadow-sm">
+                              {ans}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} key="op">
+                        <h2 className="text-2xl font-black text-slate-900 mb-2">Opérateur Manquant</h2>
+                        <p className="text-slate-500 mb-8 font-medium">Quel signe complète l'équation ?</p>
+                        <div className="text-4xl font-black text-slate-800 p-8 mb-10 bg-slate-50 rounded-2xl inline-block border border-slate-100 shadow-inner">
+                          {operatorGame.eq}
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
+                          {['+', '-', '×', '÷'].map((op) => (
+                            <Button key={op} variant="outline" onClick={() => handleOperatorClick(op)} className="h-16 text-3xl font-bold rounded-xl border-slate-200 hover:border-pink-500 hover:text-pink-500">
+                              {op}
+                            </Button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+
+                {/* Game 3: Soft Skills */}
+                {gameIndex === 2 && (
+                  <div className="p-8 md:p-12 text-center relative flex-1 flex flex-col justify-center">
+                    <div className="absolute top-4 right-6 text-sm font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full">Scénario {behIdx + 1}/{BEHAVIOR_SITS.length}</div>
+                    <h2 className="text-2xl font-black text-slate-900 mb-2">Mise en situation</h2>
+                    <p className="text-slate-500 mb-8 font-medium">Que fais-tu dans cette situation ?</p>
+                    
+                    <div className="text-xl font-black text-slate-800 p-8 mb-8 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner leading-relaxed">
                       {BEHAVIOR_SITS[behIdx].sit}
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4 max-w-xl mx-auto">
                       {BEHAVIOR_SITS[behIdx].opts.map((opt, i) => (
                         <button 
                           key={i}
-                          onClick={() => handleBehClick()}
-                          className="w-full bg-white border-2 border-slate-200 text-lg font-bold py-5 px-6 rounded-xl hover:border-orange-500 hover:text-orange-500 hover:bg-orange-50 active:scale-95 transition-all text-left shadow-sm"
+                          onClick={() => handleBehClick(opt.traits)}
+                          className="w-full bg-white border-2 border-slate-100 text-left p-5 rounded-2xl hover:border-orange-500 hover:bg-orange-50 transition-all flex items-center gap-4 group shadow-sm"
                         >
-                          {opt}
+                          <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-orange-200 flex items-center justify-center font-bold text-slate-400 group-hover:text-orange-600 transition-colors">
+                            {String.fromCharCode(65 + i)}
+                          </div>
+                          <span className="font-bold text-slate-700 group-hover:text-orange-900">{opt.text}</span>
                         </button>
                       ))}
                     </div>
@@ -511,46 +669,96 @@ export default function ProfilePage() {
                       </div>
                       <div>
                         <h2 className="text-2xl font-black text-slate-900">Résultats des Tests</h2>
-                        <p className="text-slate-500 font-medium">Voici ton profil cognitif dominant.</p>
+                        <p className="text-slate-500 font-medium">Ton profil cognitif est prêt.</p>
                       </div>
                     </div>
 
-                    <div className="space-y-8 mb-10">
-                      {/* Logic Score */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-end">
-                          <span className="font-bold text-slate-700 flex items-center gap-2"><Palette className="w-4 h-4 text-blue-500" /> Logique Visuelle</span>
-                          <span className="text-sm font-black text-blue-600">{12 + scores.logic * 3} pts</span>
-                        </div>
-                        <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, 50 + scores.logic * 10)}%` }} transition={{ duration: 1 }} className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full" />
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                      {/* Radar Chart Column */}
+                      <div className="bg-slate-50 rounded-[2rem] p-6 flex items-center justify-center border border-slate-100 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange-500/5 via-transparent to-transparent" />
+                        <svg viewBox="0 0 100 100" className="w-64 h-64 drop-shadow-2xl relative z-10">
+                          {/* Polygons background */}
+                          {[0.2, 0.4, 0.6, 0.8, 1].map((r) => (
+                            <path
+                              key={r}
+                              d={`M 50 ${50 - 40 * r} L ${50 + 40 * r} 50 L 50 ${50 + 40 * r} L ${50 - 40 * r} 50 Z`}
+                              fill="none"
+                              stroke="#e2e8f0"
+                              strokeWidth="0.5"
+                            />
+                          ))}
+                          {/* Axis */}
+                          <line x1="50" y1="10" x2="50" y2="90" stroke="#e2e8f0" strokeWidth="0.5" />
+                          <line x1="10" y1="50" x2="90" y2="50" stroke="#e2e8f0" strokeWidth="0.5" />
+                          
+                          {/* Data Polygon */}
+                          {(() => {
+                            const p = strengths.find(s => s.name === 'Pragmatisme')?.val || 0;
+                            const c = strengths.find(s => s.name === 'Créativité')?.val || 0;
+                            const l = strengths.find(s => s.name === 'Leadership')?.val || 0;
+                            const e = strengths.find(s => s.name === 'Empathie')?.val || 0;
+                            const points = [
+                              `50,${50 - (p * 40) / 100}`,
+                              `${50 + (l * 40) / 100},50`,
+                              `50,${50 + (e * 40) / 100}`,
+                              `${50 - (c * 40) / 100},50`
+                            ].join(' ');
+                            return (
+                              <motion.polygon
+                                initial={{ opacity: 0, scale: 0 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 1, delay: 0.5 }}
+                                points={points}
+                                fill="rgba(249, 115, 22, 0.3)"
+                                stroke="#f97316"
+                                strokeWidth="2"
+                                strokeLinejoin="round"
+                              />
+                            );
+                          })()}
+                        </svg>
+                        {/* Labels */}
+                        <span className="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Pragmatisme</span>
+                        <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Empathie</span>
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest [writing-mode:vertical-rl]">Leadership</span>
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest [writing-mode:vertical-rl] rotate-180">Créativité</span>
                       </div>
 
-                      {/* Math Score */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-end">
-                          <span className="font-bold text-slate-700 flex items-center gap-2"><Brain className="w-4 h-4 text-pink-500" /> Mathématiques</span>
-                          <span className="text-sm font-black text-pink-600">{15 + scores.math * 2} pts</span>
+                      {/* Percentages Column */}
+                      <div className="space-y-6 flex flex-col justify-center">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-end">
+                            <span className="font-bold text-slate-700 flex items-center gap-2 text-sm"><BrainCircuit className="w-4 h-4 text-blue-500" /> Logique & Mémoire</span>
+                            <span className="text-sm font-black text-blue-600">{Math.min(100, scores.logic * 10)}%</span>
+                          </div>
+                          <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, scores.logic * 10)}%` }} className="h-full bg-blue-500" />
+                          </div>
                         </div>
-                        <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, 60 + scores.math * 10)}%` }} transition={{ duration: 1, delay: 0.2 }} className="h-full bg-gradient-to-r from-pink-400 to-pink-500 rounded-full" />
-                        </div>
-                      </div>
 
-                      {/* Behavior Score */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-end">
-                          <span className="font-bold text-slate-700 flex items-center gap-2"><Zap className="w-4 h-4 text-orange-500" /> Soft Skills (Comportement)</span>
-                          <span className="text-sm font-black text-orange-600">{18 + scores.behavior * 2} pts</span>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-end">
+                            <span className="font-bold text-slate-700 flex items-center gap-2 text-sm"><Zap className="w-4 h-4 text-pink-500" /> Mathématiques</span>
+                            <span className="text-sm font-black text-pink-600">{Math.min(100, scores.math * 8)}%</span>
+                          </div>
+                          <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, scores.math * 8)}%` }} className="h-full bg-pink-500" />
+                          </div>
                         </div>
-                        <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, 70 + scores.behavior * 10)}%` }} transition={{ duration: 1, delay: 0.4 }} className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full" />
+
+                        <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl">
+                          <p className="text-xs text-orange-800 font-bold mb-1 flex items-center gap-1">
+                            <Trophy className="w-3 h-3" /> Analyse Personnalité
+                          </p>
+                          <p className="text-[11px] text-orange-700 font-medium leading-relaxed">
+                            Tes choix indiquent une dominance <strong>{strengths.sort((a,b) => b.val - a.val)[0].name}</strong>. C'est un atout majeur pour ton futur parcours.
+                          </p>
                         </div>
                       </div>
                     </div>
 
-                    <Button onClick={() => setStep(3)} className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg font-black text-lg transition-transform active:scale-[0.98] flex items-center gap-2">
+                    <Button onClick={() => setStep(3)} className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg font-black text-lg transition-transform active:scale-[0.98] flex items-center justify-center gap-2">
                       Passer à l'analyse ORI <ChevronRight className="w-5 h-5" />
                     </Button>
                   </div>

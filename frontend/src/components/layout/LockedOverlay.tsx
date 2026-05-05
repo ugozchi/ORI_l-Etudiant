@@ -3,9 +3,12 @@
 import { Lock, MessageCircle, User, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useProfile } from '@/contexts/ProfileContext';
 import { motion } from 'framer-motion';
 
 export function LockedOverlay() {
+  const { completionPercentage } = useProfile();
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -13,14 +16,42 @@ export function LockedOverlay() {
       className="absolute inset-0 z-50 flex items-center justify-center bg-slate-50/60 backdrop-blur-md"
     >
       <div className="max-w-md mx-auto text-center px-6">
-        {/* Lock icon */}
+        {/* Progress indicator */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-          className="w-20 h-20 bg-white rounded-3xl border border-slate-200 shadow-xl flex items-center justify-center mx-auto mb-6"
+          className="relative w-32 h-32 mx-auto mb-8"
         >
-          <Lock className="w-9 h-9 text-slate-400" />
+          {/* Circular progress background */}
+          <svg className="w-full h-full transform -rotate-90">
+            <circle
+              cx="64"
+              cy="64"
+              r="58"
+              stroke="currentColor"
+              strokeWidth="8"
+              fill="transparent"
+              className="text-white drop-shadow-sm"
+            />
+            <motion.circle
+              cx="64"
+              cy="64"
+              r="58"
+              stroke="currentColor"
+              strokeWidth="8"
+              fill="transparent"
+              strokeDasharray={364.4}
+              initial={{ strokeDashoffset: 364.4 }}
+              animate={{ strokeDashoffset: 364.4 - (364.4 * completionPercentage) / 100 }}
+              transition={{ duration: 1, delay: 0.5 }}
+              className="text-orange-500"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-2xl font-black text-slate-900">{completionPercentage}%</span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rempli</span>
+          </div>
         </motion.div>
 
         <motion.div
@@ -32,7 +63,7 @@ export function LockedOverlay() {
             Page verrouillée
           </h2>
           <p className="text-slate-500 font-medium mb-8 leading-relaxed">
-            Parle avec ORI et remplis ton profil pour débloquer toutes les fonctionnalités de l'application.
+            Ton profil est rempli à <span className="text-orange-600 font-bold">{completionPercentage}%</span>. Complète-le pour débloquer toutes les fonctionnalités !
           </p>
         </motion.div>
 
