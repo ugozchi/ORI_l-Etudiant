@@ -108,6 +108,7 @@ export default function ProfilePage() {
   const [bulletinAnalyzing, setBulletinAnalyzing] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isRetaking, setIsRetaking] = useState(false);
 
   const ORI_FOLLOWUP_MESSAGES = [
     "Top. Et côté façon de travailler, tu préfères les projets en équipe ou avancer seul sur des sujets techniques ?",
@@ -124,7 +125,11 @@ export default function ProfilePage() {
       }, 1000);
     }
     if (gameTimer === 0 && step === 2) {
-      advanceBlock(3); // Time's up -> results
+      if (gameIndex < 2) {
+        advanceBlock(gameIndex + 1); // Go to next block when time runs out
+      } else {
+        advanceBlock(3); // Time's up on last block -> results
+      }
     }
     return () => clearInterval(interval);
   }, [step, gameIndex, gameTimer]);
@@ -137,7 +142,7 @@ export default function ProfilePage() {
       setLevel(profileData.level || '');
       setInterests(profileData.interests || []);
       
-      if (profileData.is_complete || (profileData.strengths && profileData.strengths.length > 0)) {
+      if (!isRetaking && (profileData.is_complete || (profileData.strengths && profileData.strengths.length > 0))) {
         setRetakeCount(Number(profileData.tests_retake_count) || 0);
         if (profileData.scores) setScores(profileData.scores);
         if (profileData.strengths_data) {
@@ -150,7 +155,7 @@ export default function ProfilePage() {
         setStep(5);
       }
     }
-  }, [profileData]);
+  }, [profileData, isRetaking]);
 
   useEffect(() => {
     const init = async () => {
@@ -422,6 +427,7 @@ export default function ProfilePage() {
         updateProfileLocally(profileDataToSave);
         setUserId(effectiveUserId);
         setSaveSuccess(true);
+        setIsRetaking(false);
         setStep(5);
       } else {
         const err = await res.text();
@@ -516,6 +522,7 @@ export default function ProfilePage() {
     }
 
     resetTestsState();
+    setIsRetaking(true);
     // Repart du début pour conserver l'étape "bulletins / fake analyse IA"
     setStep(1);
   };
