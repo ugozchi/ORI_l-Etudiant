@@ -141,7 +141,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setUserId(session?.user?.id || 'demo-user');
+      setUserId(session?.user?.id ?? null);
       setLoading(false);
       generateMemoryGame(3);
       generateMathGame(0);
@@ -365,6 +365,14 @@ export default function ProfilePage() {
   const saveProfile = async () => {
     setSaving(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const sessionUserId = session?.user?.id;
+      const effectiveUserId = sessionUserId || userId;
+
+      if (!effectiveUserId) {
+        throw new Error("Utilisateur non authentifie, impossible de sauvegarder le profil.");
+      }
+
       const profileDataToSave = {
         name, city, level, interests,
         strengths: strengths.map(s => s.name),
@@ -376,14 +384,18 @@ export default function ProfilePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: userId,
+          user_id: effectiveUserId,
           mobility: false,
           ...profileDataToSave
         }),
       });
       if (res.ok) {
         updateProfileLocally(profileDataToSave);
+        setUserId(effectiveUserId);
         setStep(5);
+      } else {
+        const err = await res.text();
+        throw new Error(`Echec de sauvegarde du profil: ${err}`);
       }
     } catch (err) {
       console.error(err);
@@ -482,9 +494,6 @@ export default function ProfilePage() {
                     <Timer className="w-4 h-4 text-orange-500" />
                     <span className="text-white font-mono font-bold">{formatTimer(gameTimer)}</span>
                   </div>
-                  <button onClick={() => advanceBlock(3)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-orange-500 transition-colors" title="Cheat: Skip to Results">
-                    <FastForward className="w-5 h-5" />
-                  </button>
                 </div>
               </div>
 
@@ -713,7 +722,6 @@ export default function ProfilePage() {
                     <p className="text-slate-500 font-medium">Analyse croisée réussie. Explore tes recommandations.</p>
                   </div>
                 </div>
-                <Button onClick={() => setStep(1)} variant="outline" className="rounded-xl font-bold text-slate-600 border-slate-200 hover:bg-slate-50">Refaire les tests</Button>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-1 bg-slate-900 rounded-[2.5rem] p-8 text-center relative overflow-hidden border border-slate-800 flex flex-col items-center">
