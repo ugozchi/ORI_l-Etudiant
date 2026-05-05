@@ -51,9 +51,10 @@ export default function SalonsPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [checkingOutId, setCheckingOutId] = useState<string | null>(null);
+  const [orderedFairs, setOrderedFairs] = useState<Set<string>>(new Set());
   
   const supabase = createClient();
-  const { isProfileComplete } = useProfile();
+  const { isProfileComplete, profileData } = useProfile();
 
   useEffect(() => {
     const fetchFairs = async () => {
@@ -170,6 +171,7 @@ export default function SalonsPage() {
       const json = await res.json();
       if (json.status === 'success') {
         setTickets((prev) => [json.data, ...prev]);
+        setOrderedFairs(prev => new Set(prev).add(fair.id));
       }
     } catch (e) {
       console.error('Checkout failed', e);
@@ -376,7 +378,7 @@ export default function SalonsPage() {
                               <Heart className="w-4 h-4 text-pink-400" /> Ton Profil
                             </h4>
                             <p className="text-slate-300 text-sm leading-relaxed">
-                              Ton Persona indique un fort intérêt pour <strong className="text-white">l'Innovation et la Logique</strong>. Ce salon propose plus de 15 conférences exclusives sur l'avenir de l'IA et de l'ingénierie, en plein dans ta zone de génie.
+                              Ton Persona indique une dominance en <strong className="text-white">{(profileData?.strengths_data && profileData.strengths_data.length > 0) ? [...profileData.strengths_data].sort((a:any,b:any)=>b.val-a.val)[0].name : 'Créativité'}</strong> et un intérêt pour <strong className="text-white">{profileData?.interests?.[0] || fair.topics?.[0] || 'l\'Innovation'}</strong>. Ce salon propose des conférences exclusives sur les domaines <strong className="text-white">{fair.topics.slice(0,2).join(' et ')}</strong>, en plein dans ta zone de génie.
                             </p>
                           </div>
 
@@ -387,12 +389,14 @@ export default function SalonsPage() {
                             <ul className="text-slate-300 text-sm space-y-3">
                               <li className="flex items-start gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
-                                <span><strong className="text-white">EPITA :</strong> Parfaite pour ton côté technique et logique mathématique.</span>
+                                <span><strong className="text-white">Stand Principal :</strong> Parfait pour ton profil axé sur {fair.topics[0] || 'la technologie'}.</span>
                               </li>
-                              <li className="flex items-start gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
-                                <span><strong className="text-white">Rubika :</strong> Idéale si tu veux combiner tes compétences techniques avec ta créativité (Jeux Vidéo).</span>
-                              </li>
+                              {fair.topics.length > 1 && (
+                                <li className="flex items-start gap-2">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
+                                  <span><strong className="text-white">Zone {fair.topics[1]} :</strong> Idéal pour combiner tes compétences avec ta créativité.</span>
+                                </li>
+                              )}
                             </ul>
                           </div>
                         </div>
@@ -508,11 +512,11 @@ export default function SalonsPage() {
                         <div className="text-right shrink-0">
                           <p className="text-sm font-black text-slate-900">{(fair.price_eur || 10).toFixed(2)} EUR</p>
                           <Button
-                            className="mt-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl"
-                            disabled={checkingOutId === fair.id}
+                            className={cn("mt-2 rounded-xl text-white transition-colors", orderedFairs.has(fair.id) ? "bg-green-500 hover:bg-green-600" : "bg-orange-500 hover:bg-orange-600")}
+                            disabled={checkingOutId === fair.id || orderedFairs.has(fair.id)}
                             onClick={() => handleCheckout(fair)}
                           >
-                            {checkingOutId === fair.id ? 'Commande...' : 'Commander ma place'}
+                            {checkingOutId === fair.id ? 'Commande...' : orderedFairs.has(fair.id) ? 'Commandé !' : 'Commander ma place'}
                           </Button>
                         </div>
                       </div>
