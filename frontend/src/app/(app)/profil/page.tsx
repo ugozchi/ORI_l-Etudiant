@@ -269,7 +269,13 @@ export default function ProfilePage() {
       { name: 'Empathie', val: e }
     ];
     setStrengths(res);
-    updateProfileLocally({ strengths: res.map(s => s.name) });
+    // Sync with Sidebar percentage immediately
+    updateProfileLocally({ 
+      strengths: res.map(s => s.name),
+      strengths_data: res,
+      scores: scores,
+      temp_game_progress: 1 
+    });
   };
 
   const handleMemoryClick = (idx: number) => {

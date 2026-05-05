@@ -15,7 +15,7 @@ export default function SettingsPage() {
   const [view, setView] = useState<View>('menu');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const { profileData, refreshProfile } = useProfile();
+  const { profileData, refreshProfile, updateProfileLocally } = useProfile();
   const supabase = createClient();
 
   // Profile Form
@@ -40,8 +40,8 @@ export default function SettingsPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const uid = session?.user?.id;
+      if (!uid) return;
       
-      // Fetch current profile to merge (safe partial update)
       const currentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/${uid}`);
       let currentData = {};
       if (currentRes.ok) {
@@ -54,10 +54,15 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...currentData, name }),
       });
+      
       if (res.ok) {
+        updateProfileLocally({ name });
         await refreshProfile();
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
+      } else {
+        const err = await res.text();
+        console.error("Save failed:", err);
       }
     } catch (err) {
       console.error(err);
