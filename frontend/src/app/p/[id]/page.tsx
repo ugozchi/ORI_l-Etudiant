@@ -8,7 +8,8 @@ import { GraduationCap, Sparkles, MapPin, Heart, Target, Star, Brain, Lightbulb,
 import { cn } from '@/lib/utils';
 
 export default function PublicProfilePage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id;
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
@@ -16,6 +17,7 @@ export default function PublicProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        if (!id) return;
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
@@ -32,7 +34,7 @@ export default function PublicProfilePage() {
       }
     };
 
-    if (id) fetchProfile();
+    fetchProfile();
   }, [id, supabase]);
 
   if (loading) {
@@ -170,7 +172,7 @@ export default function PublicProfilePage() {
           className="pt-4"
         >
           <a 
-            href="mailto:contact@ori-app.fr"
+            href={`mailto:contact@ori-app.fr?subject=Contact%20depuis%20le%20salon%20-%20${profile.first_name}%20${profile.last_name}`}
             className="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-5 rounded-[2rem] flex items-center justify-center gap-2 shadow-xl shadow-orange-500/20 transition-all active:scale-95"
           >
             Contacter cet étudiant
@@ -185,4 +187,3 @@ export default function PublicProfilePage() {
       </footer>
     </div>
   );
-}
