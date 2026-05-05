@@ -103,7 +103,7 @@ export default function ProfilePage() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [retakeCount, setRetakeCount] = useState(0);
-  const MAX_RETAKES = 2;
+  const MAX_RETAKES = 5;
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [bulletinAnalyzing, setBulletinAnalyzing] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -249,12 +249,20 @@ export default function ProfilePage() {
     setGameTimer(120);
     setGameIndex(nextIndex);
     setSubGame('A');
+    
     // Update real-time progress in Sidebar
     const progress = (nextIndex / 3); // 0.33, 0.66, 1.0
     updateProfileLocally({ temp_game_progress: progress });
 
+    // Ensure generators are called for the correct index
     if (nextIndex === 0) generateMemoryGame(3);
-    if (nextIndex === 1) generateMathGame(0);
+    else if (nextIndex === 1) {
+      setScores(s => ({ ...s, math: 0 })); // Reset math score for new block
+      generateMathGame(0);
+    }
+    else if (nextIndex === 2) {
+      setBehIdx(0); // Reset behavior index
+    }
     if (nextIndex === 3) {
       calculateFinalStrengths();
       // Step 3 (Chat) initial message
@@ -461,6 +469,7 @@ export default function ProfilePage() {
     setChatMessages([]);
     setChatInput('');
     setQuestionIndex(0);
+    // Explicitly generate for start
     generateMemoryGame(3);
     generateMathGame(0);
   };
