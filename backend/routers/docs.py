@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 from services.ori_client import ori_client
-from routers.profile import PROFILES_DB
+from db.supabase import supabase_client
 
 router = APIRouter()
 
@@ -16,12 +16,18 @@ class DocRequest(BaseModel):
 def generate_doc(request: DocRequest) -> Dict[str, Any]:
     """Utilise ORI pour générer un document en fonction du profil de l'étudiant."""
     
-    # 1. Vérifier si l'utilisateur a un profil
-    if request.user_id not in PROFILES_DB:
-        # Fallback for Hackathon
+    # 1. Vérifier si l'utilisateur a un profil (Supabase)
+    profile_resp = (
+        supabase_client.table("profiles")
+        .select("name,level,interests,strengths")
+        .eq("user_id", request.user_id)
+        .limit(1)
+        .execute()
+    )
+    if not profile_resp.data:
         profile_ctx = "Nom: Hackathon ORI; Niveau: Inconnu; Intérêts: Tech"
     else:
-        p = PROFILES_DB[request.user_id]
+        p = profile_resp.data[0]
         profile_ctx = f"Nom: {p.get('name')}; Niveau: {p.get('level')}; Intérêts: {','.join(p.get('interests', []))}; Points forts: {','.join(p.get('strengths', []))}"
 
     # 2. Formater le prompt pour Vertex AI

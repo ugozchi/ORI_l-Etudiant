@@ -10,6 +10,7 @@ import { LockedOverlay } from '@/components/layout/LockedOverlay';
 
 export default function PassportPage() {
   const [qrBase64, setQrBase64] = useState<string | null>(null);
+  const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
   const { isProfileComplete } = useProfile();
@@ -25,6 +26,7 @@ export default function PassportPage() {
         
         if (json.status === 'success') {
           setQrBase64(json.qr_base64);
+          setTickets(json.tickets || []);
         }
       } catch (err) {
         console.error("Failed to fetch passport", err);
@@ -119,6 +121,23 @@ export default function PassportPage() {
             Ajouter à Apple Wallet
           </Button>
         </motion.div>
+
+        <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-3">Tickets enregistres</h3>
+          {tickets.length === 0 ? (
+            <p className="text-sm text-slate-500">Aucun billet pour le moment. Commande une place depuis Salons > Dashboard > Cart.</p>
+          ) : (
+            <div className="space-y-2">
+              {tickets.map((ticket) => (
+                <div key={ticket.ticket_id} className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+                  <p className="font-bold text-slate-900">{ticket.fair_name}</p>
+                  <p className="text-xs text-slate-500">{ticket.city} - {ticket.date} - x{ticket.quantity}</p>
+                  <p className="text-xs text-slate-600 mt-1">ID: {ticket.ticket_id}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Users, Heart, X, Check, Search, Calendar, GraduationCap, Sparkles, RefreshCcw, LayoutGrid, Layers, Filter } from 'lucide-react';
+import { MapPin, Heart, X, Check, Calendar, GraduationCap, Sparkles, RefreshCcw, LayoutGrid, Layers, Filter, ShoppingCart, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
@@ -21,7 +21,19 @@ type Fair = {
   schools_count: number;
   description: string;
   image_url: string;
+  full_description?: string;
+  price_eur?: number;
+  spotlight?: boolean;
   match_score?: number;
+};
+
+type TicketItem = {
+  ticket_id: string;
+  fair_name: string;
+  date: string;
+  city: string;
+  quantity: number;
+  total_price_eur: number;
 };
 
 export default function SalonsPage() {
@@ -36,6 +48,9 @@ export default function SalonsPage() {
   const [likedFairs, setLikedFairs] = useState<Set<string>>(new Set());
   const [dislikedFairs, setDislikedFairs] = useState<Set<string>>(new Set());
   const [listFilter, setListFilter] = useState<'all' | 'liked' | 'disliked' | 'top'>('all');
+  const [userId, setUserId] = useState<string | null>(null);
+  const [tickets, setTickets] = useState<TicketItem[]>([]);
+  const [checkingOutId, setCheckingOutId] = useState<string | null>(null);
   
   const supabase = createClient();
   const { isProfileComplete } = useProfile();
@@ -44,11 +59,12 @@ export default function SalonsPage() {
     const fetchFairs = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id;
+        const uid = session?.user?.id || null;
+        setUserId(uid);
         
         let url = `${process.env.NEXT_PUBLIC_API_URL}/api/fairs`;
-        if (userId) {
-           url = `${process.env.NEXT_PUBLIC_API_URL}/api/fairs/recommended/${userId}`;
+        if (uid) {
+           url = `${process.env.NEXT_PUBLIC_API_URL}/api/fairs/recommended/${uid}`;
         }
         
         const res = await fetch(url);
@@ -56,6 +72,20 @@ export default function SalonsPage() {
         
         if (json.status === 'success') {
           setFairs(json.data);
+        }
+
+        if (uid) {
+          const likedRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fairs/liked/${uid}`);
+          const likedJson = await likedRes.json();
+          if (likedJson.status === 'success') {
+            setLikedFairs(new Set((likedJson.data || []).map((f: Fair) => f.id)));
+          }
+
+          const ticketsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fairs/tickets/${uid}`);
+          const ticketsJson = await ticketsRes.json();
+          if (ticketsJson.status === 'success') {
+            setTickets(ticketsJson.data || []);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch fairs", err);
@@ -77,6 +107,9 @@ export default function SalonsPage() {
           next.add(fairId);
           return next;
         });
+        if (userId) {
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fairs/liked/${userId}/${fairId}`, { method: 'POST' }).catch(() => {});
+        }
       } else {
         setDislikedFairs(prev => {
           const next = new Set(prev);
@@ -117,6 +150,33 @@ export default function SalonsPage() {
     if (listFilter === 'top') return (f.match_score || 0) >= 80;
     return true; // 'all'
   });
+
+  const likedFairItems = fairs.filter((f) => likedFairs.has(f.id));
+  const spotlightFairs = fairs.filter((f) => f.spotlight);
+
+  const handleCheckout = async (fair: Fair) => {
+    if (!userId) return;
+    setCheckingOutId(fair.id);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fairs/tickets/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          fair_id: fair.id,
+          quantity: 1,
+        }),
+      });
+      const json = await res.json();
+      if (json.status === 'success') {
+        setTickets((prev) => [json.data, ...prev]);
+      }
+    } catch (e) {
+      console.error('Checkout failed', e);
+    } finally {
+      setCheckingOutId(null);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full overflow-y-auto relative pb-24">
@@ -375,6 +435,18 @@ export default function SalonsPage() {
         ) : (
           /* LIST / DASHBOARD VIEW */
           <div className="w-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl p-6 text-white shadow-lg">
+              <h2 className="text-xl font-black tracking-tight mb-1">Salons mis en avant</h2>
+              <p className="text-sm text-orange-100 mb-4">Selection premium adaptee a ton profil.</p>
+              <div className="flex flex-wrap gap-2">
+                {spotlightFairs.slice(0, 6).map((fair) => (
+                  <span key={fair.id} className="px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wide">
+                    {fair.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <Filter className="w-6 h-6 text-orange-500" /> Filtres
@@ -407,6 +479,68 @@ export default function SalonsPage() {
                   <Sparkles className="w-4 h-4 text-yellow-600" /> Top Match
                 </button>
               </div>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                  <ShoppingCart className="w-5 h-5 text-orange-500" /> Cart
+                </h3>
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                  {likedFairItems.length} favoris
+                </span>
+              </div>
+
+              {likedFairItems.length === 0 ? (
+                <p className="text-sm text-slate-500">Like des salons dans le mode swipe pour remplir ta cart.</p>
+              ) : (
+                <div className="space-y-4">
+                  {likedFairItems.map((fair) => (
+                    <div key={fair.id} className="border border-slate-200 rounded-2xl p-4 bg-slate-50">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h4 className="font-black text-slate-900">{fair.name}</h4>
+                          <p className="text-sm text-slate-500">{fair.city} - {fair.date}</p>
+                          <p className="text-sm text-slate-700 mt-2 leading-relaxed">
+                            {fair.full_description || fair.description}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-black text-slate-900">{(fair.price_eur || 10).toFixed(2)} EUR</p>
+                          <Button
+                            className="mt-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl"
+                            disabled={checkingOutId === fair.id}
+                            onClick={() => handleCheckout(fair)}
+                          >
+                            {checkingOutId === fair.id ? 'Commande...' : 'Commander ma place'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
+              <h3 className="text-lg font-black text-slate-900 flex items-center gap-2 mb-3">
+                <Ticket className="w-5 h-5 text-orange-500" /> Mes commandes
+              </h3>
+              {tickets.length === 0 ? (
+                <p className="text-sm text-slate-500">Aucune place commandee pour l'instant.</p>
+              ) : (
+                <div className="space-y-2">
+                  {tickets.map((t) => (
+                    <div key={t.ticket_id} className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+                      <div>
+                        <p className="font-bold text-slate-900">{t.fair_name}</p>
+                        <p className="text-xs text-slate-500">{t.city} - {t.date} - x{t.quantity}</p>
+                      </div>
+                      <p className="font-black text-slate-900">{t.total_price_eur.toFixed(2)} EUR</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -473,7 +607,7 @@ export default function SalonsPage() {
                           </div>
                         </div>
                         <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed">
-                          {fair.description}
+                          {fair.full_description || fair.description}
                         </p>
                       </div>
                     </motion.div>

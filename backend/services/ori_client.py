@@ -3,7 +3,7 @@ from vertexai.preview import reasoning_engines
 import uuid
 import os
 from core.config import settings
-from routers.profile import PROFILES_DB
+from db.supabase import supabase_client
 class OriClient:
     _instance = None
     _engine = None
@@ -40,20 +40,28 @@ class OriClient:
 
         enriched_message = message
         # Si on a un profil pour ce user_id, on l'injecte dans le message
-        if user_id and user_id in PROFILES_DB:
-            p = PROFILES_DB[user_id]
-            interests = ", ".join(p.get("interests", []))
-            strengths = ", ".join(p.get("strengths", []))
-            context = (
-                f"[CONTEXTE PROFIL ÉTUDIANT] "
-                f"Prénom: {p.get('name', 'Inconnu')}, "
-                f"Ville: {p.get('city', 'Inconnue')}, "
-                f"Niveau: {p.get('level', 'Inconnu')}, "
-                f"Intérêts: {interests}, "
-                f"Points forts: {strengths}. "
-                f"[FIN CONTEXTE]\n\n{message}"
+        if user_id:
+            profile_resp = (
+                supabase_client.table("profiles")
+                .select("name,city,level,interests,strengths")
+                .eq("user_id", user_id)
+                .limit(1)
+                .execute()
             )
-            enriched_message = context
+            if profile_resp.data:
+                p = profile_resp.data[0]
+                interests = ", ".join(p.get("interests", []))
+                strengths = ", ".join(p.get("strengths", []))
+                context = (
+                    f"[CONTEXTE PROFIL ÉTUDIANT] "
+                    f"Prénom: {p.get('name', 'Inconnu')}, "
+                    f"Ville: {p.get('city', 'Inconnue')}, "
+                    f"Niveau: {p.get('level', 'Inconnu')}, "
+                    f"Intérêts: {interests}, "
+                    f"Points forts: {strengths}. "
+                    f"[FIN CONTEXTE]\n\n{message}"
+                )
+                enriched_message = context
 
         # L'appel à l'API
         response = self._engine.query(

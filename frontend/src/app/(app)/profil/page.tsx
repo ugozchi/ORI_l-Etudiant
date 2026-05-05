@@ -101,6 +101,8 @@ export default function ProfilePage() {
   const [chatInput, setChatInput] = useState('');
   const [questionIndex, setQuestionIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [retakeCount, setRetakeCount] = useState(0);
+  const MAX_RETAKES = 2;
 
   // Timer effect
   useEffect(() => {
@@ -125,6 +127,7 @@ export default function ProfilePage() {
       setInterests(profileData.interests || []);
       
       if (profileData.is_complete || profileData.strengths) {
+        setRetakeCount(Number(profileData.tests_retake_count) || 0);
         if (profileData.scores) setScores(profileData.scores);
         if (profileData.strengths_data) {
           setStrengths(profileData.strengths_data);
@@ -378,7 +381,8 @@ export default function ProfilePage() {
         strengths: strengths.map(s => s.name),
         strengths_data: strengths,
         scores: scores,
-        is_complete: true
+        is_complete: true,
+        tests_retake_count: retakeCount
       };
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/`, {
         method: 'POST',
@@ -402,6 +406,74 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const resetTestsState = () => {
+    setScores({
+      logic: 0,
+      math: 0,
+      softSkills: { pragmatism: 0, creativity: 0, leadership: 0, empathy: 0 }
+    });
+    setStrengths([
+      { name: 'Pragmatisme', val: 0 },
+      { name: 'Créativité', val: 0 },
+      { name: 'Leadership', val: 0 },
+      { name: 'Empathie', val: 0 }
+    ]);
+    setGameIndex(0);
+    setSubGame('A');
+    setGameTimer(120);
+    setBehIdx(0);
+    setChatMessages([]);
+    setChatInput('');
+    setQuestionIndex(0);
+    generateMemoryGame(3);
+    generateMathGame(0);
+  };
+
+  const handleRetakeTests = async () => {
+    if (retakeCount >= MAX_RETAKES) return;
+
+    const nextRetakeCount = retakeCount + 1;
+    setRetakeCount(nextRetakeCount);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user?.id || userId;
+      if (!uid) throw new Error('Utilisateur non authentifie.');
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: uid,
+          name,
+          city,
+          level,
+          interests,
+          strengths,
+          strengths_data: strengths,
+          scores,
+          is_complete: true,
+          mobility: false,
+          tests_retake_count: nextRetakeCount
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Impossible de sauvegarder le compteur de retests: ${err}`);
+      }
+
+      updateProfileLocally({ tests_retake_count: nextRetakeCount });
+    } catch (err) {
+      console.error(err);
+      setRetakeCount(retakeCount);
+      return;
+    }
+
+    resetTestsState();
+    setStep(2);
   };
 
   const toggleInterest = (interest: string) => {
@@ -721,6 +793,21 @@ export default function ProfilePage() {
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight">Ton Persona est Prêt</h2>
                     <p className="text-slate-500 font-medium">Analyse croisée réussie. Explore tes recommandations.</p>
                   </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {retakeCount < MAX_RETAKES ? (
+                    <Button
+                      onClick={handleRetakeTests}
+                      variant="outline"
+                      className="rounded-xl font-bold text-slate-600 border-slate-200 hover:bg-slate-50"
+                    >
+                      Refaire les tests ({MAX_RETAKES - retakeCount} restant{MAX_RETAKES - retakeCount > 1 ? 's' : ''})
+                    </Button>
+                  ) : (
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                      Limite de retest atteinte
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
