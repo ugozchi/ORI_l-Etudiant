@@ -9,6 +9,8 @@ interface ProfileData {
   level?: string;
   interests?: string[];
   strengths?: string[];
+  strengths_data?: { name: string; val: number }[];
+  scores?: { logic: number; math: number; softSkills: any };
   [key: string]: any;
 }
 

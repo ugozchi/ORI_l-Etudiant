@@ -20,6 +20,9 @@ export default function SettingsPage() {
 
   // Profile Form
   const [name, setName] = useState('');
+  const [city, setCity] = useState('');
+  const [level, setLevel] = useState('');
+  const [interests, setInterests] = useState<string[]>([]);
   const [email, setEmail] = useState('');
 
   // Security Form
@@ -29,6 +32,9 @@ export default function SettingsPage() {
   useEffect(() => {
     if (profileData) {
       setName(profileData.name || '');
+      setCity(profileData.city || '');
+      setLevel(profileData.level || '');
+      setInterests(profileData.interests || []);
       setEmail(profileData.email || '');
     }
   }, [profileData]);
@@ -49,14 +55,22 @@ export default function SettingsPage() {
         if (json.status === 'success') currentData = json.data;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/${uid}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...currentData, name }),
+        body: JSON.stringify({ 
+          ...currentData,
+          user_id: uid,
+          name, 
+          city, 
+          level, 
+          interests,
+          mobility: (currentData as { mobility?: boolean }).mobility ?? false
+        }),
       });
       
       if (res.ok) {
-        updateProfileLocally({ name });
+        updateProfileLocally({ name, city, level, interests });
         await refreshProfile();
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
@@ -165,15 +179,38 @@ export default function SettingsPage() {
           {view === 'profile' && (
             <motion.div key="profile" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               {renderHeader('Profil personnel')}
-              <form onSubmit={handleUpdateProfile} className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm space-y-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nom complet</label>
-                  <Input value={name} onChange={e => setName(e.target.value)} className="bg-slate-50 border-slate-200 h-14 rounded-xl font-bold focus-visible:ring-orange-500" placeholder="Ton nom" />
+              <form onSubmit={handleUpdateProfile} className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nom complet</label>
+                    <Input value={name} onChange={e => setName(e.target.value)} className="bg-slate-50 border-slate-200 h-14 rounded-xl font-bold focus-visible:ring-orange-500" placeholder="Ton nom" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Ville</label>
+                    <Input value={city} onChange={e => setCity(e.target.value)} className="bg-slate-50 border-slate-200 h-14 rounded-xl font-bold focus-visible:ring-orange-500" placeholder="Ta ville" />
+                  </div>
                 </div>
-                <div className="space-y-2 opacity-60">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Email (non modifiable)</label>
-                  <Input value={email} disabled className="bg-slate-100 border-slate-200 h-14 rounded-xl font-bold cursor-not-allowed" />
+
+                <div className="space-y-4">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Niveau d'études</label>
+                  <div className="flex flex-wrap gap-2">
+                    {["Seconde", "Première", "Terminale", "Bac+1", "Bac+2", "Bac+3"].map(l => (
+                      <button type="button" key={l} onClick={() => setLevel(l)} className={cn("px-4 py-2 rounded-xl text-sm border transition-all font-bold", level === l ? "bg-orange-500 border-orange-500 text-white shadow-md" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50")}>{l}</button>
+                    ))}
+                  </div>
                 </div>
+
+                <div className="space-y-4">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Centres d'intérêt</label>
+                  <div className="flex flex-wrap gap-2">
+                    {["Informatique", "Sciences", "Art", "Santé", "Droit", "Commerce", "Ingénierie", "Lettres", "Jeux Vidéo"].map(interest => (
+                      <button type="button" key={interest} onClick={() => {
+                        setInterests(prev => prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]);
+                      }} className={cn("px-4 py-2 rounded-xl text-sm font-bold border transition-all", interests.includes(interest) ? "bg-slate-900 border-slate-900 text-white shadow-md" : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50")}>{interest}</button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="pt-4 flex items-center gap-4">
                   <Button type="submit" disabled={loading} className="flex-1 h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg font-black text-lg transition-transform active:scale-[0.98]">
                     {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Sauvegarder les modifications"}

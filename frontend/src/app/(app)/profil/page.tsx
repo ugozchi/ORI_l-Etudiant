@@ -372,10 +372,14 @@ export default function ProfilePage() {
         scores: scores,
         is_complete: true
       };
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/${userId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profileDataToSave),
+        body: JSON.stringify({
+          user_id: userId,
+          mobility: false,
+          ...profileDataToSave
+        }),
       });
       if (res.ok) {
         updateProfileLocally(profileDataToSave);
