@@ -13,6 +13,7 @@ import { createClient } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '@/contexts/ProfileContext';
+import { apiUrl } from '@/utils/api';
 
 const INTERESTS_LIST = [
   "Informatique", "Sciences", "Art", "Santé", 
@@ -400,7 +401,7 @@ export default function ProfilePage() {
         is_complete: true,
         tests_retake_count: retakeCount
       };
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/`, {
+      const res = await fetch(apiUrl('/api/profile/'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -474,7 +475,7 @@ export default function ProfilePage() {
       const uid = session?.user?.id || userId;
       if (!uid) throw new Error('Utilisateur non authentifie.');
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/`, {
+      const res = await fetch(apiUrl('/api/profile/'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

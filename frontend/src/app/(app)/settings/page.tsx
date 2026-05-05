@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/utils/supabase/client';
 import { useProfile } from '@/contexts/ProfileContext';
+import { apiUrl } from '@/utils/api';
 
 type View = 'menu' | 'profile' | 'security' | 'notifications' | 'billing';
 
@@ -48,7 +49,7 @@ export default function SettingsPage() {
       const uid = session?.user?.id;
       if (!uid) return;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/`, {
+      const res = await fetch(apiUrl('/api/profile/'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

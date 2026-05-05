@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import { apiUrl } from '@/utils/api';
 
 interface ProfileData {
   name?: string;
@@ -37,6 +38,7 @@ export function useProfile() {
 }
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
+  const PROFILE_CACHE_KEY = 'ori_profile_cache';
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
@@ -50,7 +52,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/${uid}`);
+      const res = await fetch(apiUrl(`/api/profile/${uid}`));
       let profile = { email: session?.user?.email };
       if (res.ok) {
         const json = await res.json();
@@ -59,8 +61,16 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         }
       }
       setProfileData(profile);
+      localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile));
     } catch {
-      // Profile doesn't exist yet — that's expected for new users
+      const cached = localStorage.getItem(PROFILE_CACHE_KEY);
+      if (cached) {
+        try {
+          setProfileData(JSON.parse(cached));
+        } catch {
+          // ignore corrupted cache
+        }
+      }
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +104,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, [profileData]);
 
   const updateProfileLocally = useCallback((data: Partial<ProfileData>) => {
-    setProfileData(prev => prev ? { ...prev, ...data } : data as ProfileData);
+    setProfileData(prev => {
+      const next = prev ? { ...prev, ...data } : data as ProfileData;
+      localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(next));
+      return next;
+    });
   }, []);
 
   const isProfileComplete = completionPercentage === 100;
