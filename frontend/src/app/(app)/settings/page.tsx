@@ -77,11 +77,11 @@ export default function SettingsPage() {
       } else {
         const err = await res.text();
         console.error("Save failed:", err);
-        alert("La sauvegarde des paramètres a échoué. Vérifie que le backend est bien redéployé.");
+        alert(`La sauvegarde des paramètres a échoué.\n${err}`);
       }
     } catch (err) {
       console.error(err);
-      alert("Erreur réseau pendant la sauvegarde des paramètres.");
+      alert(`Erreur réseau pendant la sauvegarde des paramètres.\n${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoading(false);
     }

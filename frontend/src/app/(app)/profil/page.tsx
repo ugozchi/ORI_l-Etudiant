@@ -417,6 +417,7 @@ export default function ProfilePage() {
         setStep(5);
       } else {
         const err = await res.text();
+        console.error('Profile save response:', err);
         throw new Error(`Echec de sauvegarde du profil: ${err}`);
       }
     } catch (err) {

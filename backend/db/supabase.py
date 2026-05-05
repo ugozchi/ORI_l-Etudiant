@@ -5,8 +5,11 @@ def get_supabase_client() -> Client:
     """
     Initialise et retourne le client Supabase
     """
-    url: str = settings.supabase_url
-    key: str = settings.supabase_key
+    url: str = settings.supabase_url.strip()
+    key: str = settings.supabase_key.strip()
+
+    if not url.startswith("http"):
+        raise ValueError(f"SUPABASE_URL invalide: {url}")
     
     supabase: Client = create_client(url, key)
     return supabase

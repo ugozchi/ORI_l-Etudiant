@@ -11,7 +11,10 @@ function getBackendBaseUrl(): string {
 function buildTargetUrl(path: string[]): string {
   const base = getBackendBaseUrl();
   const joined = path.join('/');
-  return `${base}/${joined}`;
+  const normalizedJoined = base.endsWith('/api') && joined.startsWith('api/')
+    ? joined.replace(/^api\//, '')
+    : joined;
+  return `${base}/${normalizedJoined}`;
 }
 
 async function forward(request: NextRequest, params: { path: string[] }) {
