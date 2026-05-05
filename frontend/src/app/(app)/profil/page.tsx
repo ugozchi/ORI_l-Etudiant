@@ -137,7 +137,7 @@ export default function ProfilePage() {
       setLevel(profileData.level || '');
       setInterests(profileData.interests || []);
       
-      if (profileData.is_complete || profileData.strengths) {
+      if (profileData.is_complete || (profileData.strengths && profileData.strengths.length > 0)) {
         setRetakeCount(Number(profileData.tests_retake_count) || 0);
         if (profileData.scores) setScores(profileData.scores);
         if (profileData.strengths_data) {
@@ -737,7 +737,7 @@ export default function ProfilePage() {
                         </div>
                         <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl">
                           <p className="text-xs text-orange-800 font-bold mb-1 flex items-center gap-1"><Trophy className="w-3 h-3" /> Analyse Personnalité</p>
-                          <p className="text-[11px] text-orange-700 font-medium leading-relaxed">Tes choix indiquent une dominance <strong>{strengths.sort((a,b) => b.val - a.val)[0].name}</strong>. C'est un atout majeur pour ton futur parcours.</p>
+                          <p className="text-[11px] text-orange-700 font-medium leading-relaxed">Tes choix indiquent une dominance <strong>{strengths.length > 0 ? [...strengths].sort((a,b) => b.val - a.val)[0].name : ''}</strong>. C'est un atout majeur pour ton futur parcours.</p>
                         </div>
                       </div>
                     </div>
@@ -896,7 +896,7 @@ export default function ProfilePage() {
                     <h3 className="text-xl font-black text-slate-900 mb-4">Analyse de ORI</h3>
                     <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative">
                       <Sparkles className="absolute top-4 right-4 w-5 h-5 text-orange-400" />
-                      <p className="text-slate-600 leading-relaxed font-medium">Tes performances en {scores.logic > scores.math ? 'logique' : 'mathématiques'} couplées à ton tempérament {strengths.sort((a,b)=>b.val-a.val)[0].name.toLowerCase()} suggèrent une orientation vers des filières à haute valeur technique. Ton potentiel d'innovation est marqué.</p>
+                      <p className="text-slate-600 leading-relaxed font-medium">Tes performances en {scores.logic > scores.math ? 'logique' : 'mathématiques'} couplées à ton tempérament {strengths.length > 0 ? [...strengths].sort((a,b)=>b.val-a.val)[0].name.toLowerCase() : ''} suggèrent une orientation vers des filières à haute valeur technique. Ton potentiel d'innovation est marqué.</p>
                     </div>
                   </div>
                 </div>
