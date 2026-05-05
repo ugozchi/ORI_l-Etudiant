@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { useProfile } from '@/contexts/ProfileContext';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { apiUrl } from '@/utils/api';
 
 type Message = {
   id: string;
@@ -188,7 +189,7 @@ Ton profil est actuellement rempli à **${completionPercentage}%**. Pour que je 
         if (error) console.warn("Erreur sauvegarde user:", error);
       });
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/`, {
+      const response = await fetch(apiUrl('/api/chat/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -224,9 +225,15 @@ Ton profil est actuellement rempli à **${completionPercentage}%**. Pour que je 
       setAllMessages(prev => [...prev, assistantMsg]);
     } catch (error) {
       console.error(error);
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       setAllMessages(prev => [
         ...prev,
-        { id: Date.now().toString() + 'err', role: 'assistant', content: 'Désolé, une erreur est survenue.', thread_id: activeThreadId }
+        {
+          id: Date.now().toString() + 'err',
+          role: 'assistant',
+          content: `Désolé, une erreur est survenue. (${errorMessage})`,
+          thread_id: activeThreadId
+        }
       ]);
     } finally {
       setLoading(false);
