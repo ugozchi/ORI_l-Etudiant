@@ -485,41 +485,7 @@ export default function ProfilePage() {
 
     const nextRetakeCount = retakeCount + 1;
     setRetakeCount(nextRetakeCount);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const uid = session?.user?.id || userId;
-      if (!uid) throw new Error('Utilisateur non authentifie.');
-
-      const res = await fetch(apiUrl('/api/profile/'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: uid,
-          name,
-          city,
-          level,
-          interests,
-          strengths,
-          strengths_data: strengths,
-          scores,
-          is_complete: true,
-          mobility: false,
-          tests_retake_count: nextRetakeCount
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`Impossible de sauvegarder le compteur de retests: ${err}`);
-      }
-
-      updateProfileLocally({ tests_retake_count: nextRetakeCount });
-    } catch (err) {
-      console.error(err);
-      setRetakeCount(retakeCount);
-      return;
-    }
+    updateProfileLocally({ tests_retake_count: nextRetakeCount });
 
     resetTestsState();
     setIsRetaking(true);
