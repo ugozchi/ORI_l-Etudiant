@@ -125,7 +125,7 @@ export default function PassportPage() {
         <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
           <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-3">Tickets enregistres</h3>
           {tickets.length === 0 ? (
-            <p className="text-sm text-slate-500">Aucun billet pour le moment. Commande une place depuis Salons > Dashboard > Cart.</p>
+            <p className="text-sm text-slate-500">Aucun billet pour le moment. Commande une place depuis Salons {'>'} Dashboard {'>'} Cart.</p>
           ) : (
             <div className="space-y-2">
               {tickets.map((ticket) => (

@@ -248,6 +248,9 @@ export default function ProfilePage() {
       calculateFinalStrengths();
       // Step 3 (Chat) initial message
       setChatMessages([{ role: 'ori', content: "Analyse terminée ! Tes résultats montrent un profil fascinant. Veux-tu savoir comment tes compétences cognitives influencent ton futur métier ?" }]);
+      setQuestionIndex(0);
+      // Lance automatiquement la fake conversation ORI après les tests
+      setTimeout(() => setStep(3), 500);
     }
   };
 
@@ -473,7 +476,8 @@ export default function ProfilePage() {
     }
 
     resetTestsState();
-    setStep(2);
+    // Repart du début pour conserver l'étape "bulletins / fake analyse IA"
+    setStep(1);
   };
 
   const toggleInterest = (interest: string) => {

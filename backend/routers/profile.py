@@ -7,15 +7,19 @@ router = APIRouter()
 
 class Profile(BaseModel):
     user_id: str
-    name: str
-    city: str
-    level: str
-    interests: List[str]
-    strengths: List[str]
-    mobility: bool
+    name: str = ""
+    city: str = ""
+    level: str = ""
+    interests: List[str] = []
+    strengths: List[str] = []
+    mobility: bool = False
     target_diploma: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
+    strengths_data: Optional[List[Dict[str, Any]]] = None
+    scores: Optional[Dict[str, Any]] = None
+    is_complete: Optional[bool] = False
+    tests_retake_count: Optional[int] = 0
 
 @router.post("/")
 def create_or_update_profile(profile: Profile):
