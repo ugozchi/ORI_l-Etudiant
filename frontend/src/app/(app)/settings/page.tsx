@@ -39,10 +39,20 @@ export default function SettingsPage() {
     setSuccess(false);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/${session?.user?.id}`, {
+      const uid = session?.user?.id;
+      
+      // Fetch current profile to merge (safe partial update)
+      const currentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/${uid}`);
+      let currentData = {};
+      if (currentRes.ok) {
+        const json = await currentRes.json();
+        if (json.status === 'success') currentData = json.data;
+      }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/${uid}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ ...currentData, name }),
       });
       if (res.ok) {
         await refreshProfile();

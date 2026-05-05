@@ -76,7 +76,7 @@ export default function ProfilePage() {
   // Games Arcade state
   const [gameIndex, setGameIndex] = useState(0); // 0: Logic/Mem, 1: Math/Res, 2: Soft Skills, 3: Results
   const [subGame, setSubGame] = useState<'A' | 'B'>('A');
-  const [gameTimer, setGameTimer] = useState(300);
+  const [gameTimer, setGameTimer] = useState(120);
   const [scores, setScores] = useState({ 
     logic: 0, 
     math: 0, 
@@ -232,7 +232,7 @@ export default function ProfilePage() {
   };
 
   const advanceBlock = (nextIndex: number) => {
-    setGameTimer(180);
+    setGameTimer(120);
     setGameIndex(nextIndex);
     setSubGame('A');
     // Update real-time progress in Sidebar
@@ -249,12 +249,17 @@ export default function ProfilePage() {
   };
 
   const calculateFinalStrengths = () => {
-    // Strict normalization: Max points expected around 10-15 per trait
-    const normalize = (val: number) => Math.min(100, Math.floor((val / 15) * 100));
+    // Skills are now a mix of behavior choices and game performance
+    // Logic performance boosts Pragmatism and Creativity
+    const logicBonus = scores.logic * 1.5;
+    // Math performance boosts Pragmatism
+    const mathBonus = scores.math * 1.5;
+
+    const normalize = (val: number) => Math.min(100, Math.floor((val / 20) * 100));
     
-    const p = normalize(scores.softSkills.pragmatism);
-    const c = normalize(scores.softSkills.creativity);
-    const l = normalize(scores.softSkills.leadership);
+    const p = normalize(scores.softSkills.pragmatism + mathBonus + (logicBonus / 2));
+    const c = normalize(scores.softSkills.creativity + (logicBonus / 2));
+    const l = normalize(scores.softSkills.leadership + (scores.logic > 10 ? 2 : 0));
     const e = normalize(scores.softSkills.empathy);
     
     const res = [
