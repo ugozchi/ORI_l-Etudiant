@@ -468,6 +468,16 @@ export default function ProfilePage() {
                   <div className={cn("px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest", gameIndex === 2 ? "bg-orange-500 text-white" : "bg-slate-800 text-slate-500")}>Social</div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {gameIndex < 3 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => advanceBlock(gameIndex + 1)}
+                      className="h-9 rounded-full border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700 hover:text-white"
+                    >
+                      Bloc suivant
+                    </Button>
+                  )}
                   <div className="flex items-center gap-2 bg-slate-800 px-4 py-1.5 rounded-full border border-slate-700">
                     <Timer className="w-4 h-4 text-orange-500" />
                     <span className="text-white font-mono font-bold">{formatTimer(gameTimer)}</span>
