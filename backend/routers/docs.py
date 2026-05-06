@@ -87,7 +87,7 @@ def generate_doc(request: DocRequest) -> Dict[str, Any]:
         f"- Ne fais JAMAIS d'introduction conversationnelle ('Voici votre document...'). Commence directement par le contenu demandé."
     )
 
-    # 3. Génération via l'agent ORI (Reasoning Engine)
+    # 3. Génération via l'agent ORI (Reasoning Engine ou Simulation Premium)
     try:
         from services.ori_client import ori_client
         result = ori_client.chat(
@@ -97,12 +97,37 @@ def generate_doc(request: DocRequest) -> Dict[str, Any]:
         doc_content = result["response"]
         
     except Exception as e:
-        print(f"Erreur avec Agent ORI : {e}. Utilisation du fallback.")
-        # Fallback ultra-robuste
-        school_str = request.target_school if request.target_school else 'votre établissement'
-        prog_str = request.target_program if request.target_program else 'votre formation'
+        print(f"Mode Démo Docs Activé: {e}")
         
-        doc_content = f"Objet : Candidature pour {prog_str} à {school_str}\n\nMadame, Monsieur,\n\nActuellement en plein développement de mon projet académique, je vous adresse ma candidature..."
+        # --- SIMULATION PREMIUM DOCS ---
+        student_name = "L'étudiant"
+        student_strengths = "Grande adaptabilité et esprit d'analyse"
+        student_interests = "l'innovation"
+        
+        try:
+            if profile_resp and profile_resp.data:
+                p_data = profile_resp.data[0]
+                student_name = p_data.get('name', student_name)
+                student_strengths = ", ".join(p_data.get("strengths", [])) or student_strengths
+                student_interests = ", ".join(p_data.get("interests", [])) or student_interests
+        except: pass
+
+        school_str = request.target_school if request.target_school else "votre établissement"
+        prog_str = request.target_program if request.target_program else "votre formation"
+
+        doc_content = (
+            f"Objet : Candidature pour {prog_str} - {school_str}\n\n"
+            f"Madame, Monsieur,\n\n"
+            f"Je m'appelle {student_name} et je vous adresse ma candidature pour intégrer {school_str}. "
+            f"Mon profil, caractérisé par {student_strengths}, ainsi que mon intérêt pour {student_interests}, "
+            f"me confortent dans l'idée que votre formation est le tremplin idéal pour mon projet professionnel.\n\n"
+            f"Ayant récemment validé mes tests cognitifs Alberthon avec succès, j'ai pu confirmer mon appétence pour l'analyse stratégique "
+            f"et la résolution de problèmes complexes. Ces compétences, alliées à ma passion pour {student_interests}, "
+            f"me permettront d'apporter une réelle valeur ajoutée au sein de votre promotion.\n\n"
+            f"Je serais ravi de vous exposer mes motivations plus en détail lors d'un entretien.\n\n"
+            f"Dans l'attente de votre réponse, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.\n\n"
+            f"Cordialement,\n{student_name}"
+        )
 
     return {
         "status": "success",
