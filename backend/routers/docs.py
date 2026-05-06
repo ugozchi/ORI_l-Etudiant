@@ -93,6 +93,13 @@ def generate_doc(request: DocRequest) -> Dict[str, Any]:
         from vertexai.generative_models import GenerativeModel
         from core.config import settings
         import vertexai
+        import os
+        from pathlib import Path
+        
+        if "GOOGLE_APPLICATION_CREDENTIALS" not in os.environ:
+            root_dir = Path(__file__).resolve().parent.parent.parent
+            cred_path = root_dir / "credentials" / "letudiant-data-prod-ori-key.json"
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(cred_path)
         
         # Initialisation rapide au cas où
         vertexai.init(project=settings.gcp_project_id, location=settings.vertex_location)
