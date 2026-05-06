@@ -47,9 +47,9 @@ export default function DocsPage() {
       if (json.status === 'success') {
         setResult(json.doc_content);
       }
-    } catch (err) {
-      console.error(err);
-      setResult("Une erreur s'est produite lors de la génération. Le serveur Vertex AI est peut-être injoignable.");
+    } catch (err: any) {
+      console.error("Fetch error:", err);
+      setResult(`Erreur de connexion : ${err.message || "Impossible de joindre le serveur"}. Assurez-vous que le backend a fini de se déployer avec la nouvelle mise à jour.`);
     } finally {
       setGenerating(false);
     }

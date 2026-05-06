@@ -71,15 +71,20 @@ def generate_doc(request: DocRequest) -> Dict[str, Any]:
         extra_info_str = f"\nL'étudiant a également fourni ces directives spécifiques : '{request.additional_info}'. Prends-les absolument en compte.\n"
 
     prompt = (
-        f"Tu es un expert en recrutement et en orientation scolaire. "
-        f"Ta mission est de rédiger {doc_desc}{target_info} pour un étudiant. "
-        f"\n\nVoici le profil très détaillé de l'étudiant, incluant ses formations passées et son analyse cognitive : [{profile_ctx}].\n"
+        f"Agis comme un Executive Coach Senior (ex-McKinsey/Goldman Sachs) expert en recrutement pour les cursus d'excellence. "
+        f"Ta mission est de produire {doc_desc}{target_info} pour ce talent.\n"
+        f"\n[PROFIL DU CANDIDAT]\n{profile_ctx}\n"
         f"{extra_info_str}\n"
-        f"Rédige le document final de manière professionnelle, structurée, mais authentique (prête à être copiée-collée). "
-        f"IMPORTANT : Tu dois impérativement générer le résultat en TEXTE BRUT (PLAIN TEXT). "
-        f"N'utilise ABSOLUMENT AUCUNE balise Markdown (pas de *, pas de #, pas de _, pas de mots en gras ou italique). "
-        f"Utilise uniquement des retours à la ligne pour aérer et structurer ton texte. "
-        f"N'inclus AUCUN message d'introduction ou de politesse comme 'Voici votre lettre', donne uniquement le contenu brut du document demandé."
+        f"DIRECTIVES DE RÉDACTION :\n"
+        f"- Niveau de langage : Ultra-professionnel, percutant, 'Executive'. Évite les formules creuses. Utilise un vocabulaire orienté impact, résultats, et leadership.\n"
+        f"- Profondeur : Ne te contente pas de surface. Connecte intelligemment ses points forts cognitifs et son parcours académique avec les exigences de la formation/école visée.\n"
+        f"- Structure de CV : Si c'est un CV, fournis une architecture très détaillée (Titre, Accroche percutante, Expériences avec 'bullet points' orientés résultats, Compétences clés).\n"
+        f"- Lettre/Parcoursup : Si c'est une lettre ou un projet motivé, rédige le texte complet avec une introduction accrocheuse (storytelling), un développement sur la synergie entre son profil et l'école, et une conclusion forte.\n\n"
+        f"CONTRAINTE TECHNIQUE CRITIQUE :\n"
+        f"- Génère UNIQUEMENT du TEXTE BRUT (PLAIN TEXT).\n"
+        f"- ZÉRO balises Markdown (aucun astérisque *, aucun dièse #, aucun tiret de formatage automatique, pas de gras, pas d'italique).\n"
+        f"- Utilise uniquement des sauts de ligne pour séparer les paragraphes.\n"
+        f"- Ne fais JAMAIS d'introduction conversationnelle ('Voici votre document...'). Commence directement par le contenu demandé."
     )
 
     # 3. Génération
