@@ -24,17 +24,13 @@ class Profile(BaseModel):
 @router.post("/")
 def create_or_update_profile(profile: Profile):
     """Crée ou met à jour un profil dans Supabase."""
-    profile_dict = profile.model_dump()
-    minimal_payload = {
-        "user_id": profile_dict.get("user_id"),
-        "name": profile_dict.get("name", ""),
-        "city": profile_dict.get("city", ""),
-        "level": profile_dict.get("level", ""),
-        "interests": profile_dict.get("interests", []),
-        "strengths": profile_dict.get("strengths", []),
-        "mobility": profile_dict.get("mobility", False),
-        "target_diploma": profile_dict.get("target_diploma"),
-    }
+    # exclude_none=True prevents overwriting defaults like created_at with null
+    profile_dict = profile.model_dump(exclude_none=True)
+    
+    # We update updated_at manually
+    from datetime import datetime
+    profile_dict["updated_at"] = datetime.now().isoformat()
+
     try:
         # Full payload (new schema)
         supabase_client.table("profiles").upsert(profile_dict, on_conflict="user_id").execute()
@@ -51,12 +47,12 @@ def create_or_update_profile(profile: Profile):
             if existing.data:
                 (
                     supabase_client.table("profiles")
-                    .update(minimal_payload)
+                    .update(profile_dict)
                     .eq("user_id", profile_dict["user_id"])
                     .execute()
                 )
             else:
-                supabase_client.table("profiles").insert(minimal_payload).execute()
+                supabase_client.table("profiles").insert(profile_dict).execute()
         except Exception as fallback_error:
             raise HTTPException(
                 status_code=500,

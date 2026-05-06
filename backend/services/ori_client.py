@@ -43,7 +43,7 @@ class OriClient:
         if user_id:
             profile_resp = (
                 supabase_client.table("profiles")
-                .select("name,city,level,interests,strengths")
+                .select("*")
                 .eq("user_id", user_id)
                 .limit(1)
                 .execute()
@@ -52,6 +52,10 @@ class OriClient:
                 p = profile_resp.data[0]
                 interests = ", ".join(p.get("interests", []))
                 strengths = ", ".join(p.get("strengths", []))
+                is_complete = p.get("is_complete", False)
+                scores = p.get("scores", {})
+                updated_at = p.get("updated_at", "Inconnue")
+                
                 context = (
                     f"[CONTEXTE PROFIL ÉTUDIANT] "
                     f"Prénom: {p.get('name', 'Inconnu')}, "
@@ -59,8 +63,19 @@ class OriClient:
                     f"Niveau: {p.get('level', 'Inconnu')}, "
                     f"Intérêts: {interests}, "
                     f"Points forts: {strengths}. "
-                    f"[FIN CONTEXTE]\n\n{message}"
                 )
+                
+                if is_complete:
+                    context += (
+                        f"\nInformation Critique: L'étudiant a complété ses tests d'évaluation le {updated_at}. "
+                        f"Voici ses scores: {scores}. "
+                        f"Son Persona complet est généré. Fais un \"sum up\" (un résumé global) de son Persona et "
+                        f"propose-lui des orientations concrètes, des métiers ou des salons adaptés à ces résultats.\n"
+                    )
+                else:
+                    context += "\nInformation: Le profil cognitif de l'étudiant n'est pas encore complété. Encourage-le à passer les tests d'évaluation.\n"
+
+                context += f"[FIN CONTEXTE]\n\n{message}"
                 enriched_message = context
 
         # L'appel à l'API
