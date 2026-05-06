@@ -51,24 +51,51 @@ const FIELD_OPTIONS = [
   'Sciences Politiques', 'Communication', 'Autre'
 ];
 
-export default function ParcoursPage() {
-  const [steps, setSteps] = useState<AcademicStep[]>([
-    { id: '1', year: '2019-2020', school: 'Institut Catholique de Paris', city: 'Paris', diploma: 'Licence', field: 'Sciences Sociales', status: 'completed' },
-    { id: '2', year: '2020-2024', school: '42', city: 'Paris', diploma: 'Diplôme d\'Ingénieur', field: 'Informatique', status: 'completed', mentions: 'Excellence en Algorithmique' },
-    { id: '3', year: '2024-2025', school: 'HEC Paris', city: 'Jouy-en-Josas', diploma: 'Master', field: 'MSc Entrepreneurs', status: 'in-progress' },
-    { id: '4', year: '2024-2025', school: 'Mines Paris - PSL / Albert School', city: 'Paris', diploma: 'Master', field: 'MSc Data for Finance', status: 'in-progress' },
-    { id: 'ori-1', year: 'Aujourd\'hui', school: 'L\'Étudiant', city: 'En ligne', diploma: 'Génération de Persona IA', field: 'Analyse Cognitive & Soft Skills', status: 'completed', mentions: 'Profil validé à 100%', isOriAction: true },
-    { id: 'ori-2', year: 'Bientôt', school: 'Salon L\'Étudiant', city: 'Paris Porte de Versailles', diploma: 'Réservation de Billet VIP', field: 'Rencontre Écoles (HEC & Mines)', status: 'planned', mentions: 'Recommandé par ORI', isOriAction: true },
-  ]);
+const DEFAULT_STEPS: AcademicStep[] = [
+  { id: '1', year: '2019-2020', school: 'Institut Catholique de Paris', city: 'Paris', diploma: 'Licence', field: 'Sciences Sociales', status: 'completed' },
+  { id: '2', year: '2020-2024', school: '42', city: 'Paris', diploma: 'Diplôme d\'Ingénieur', field: 'Informatique', status: 'completed', mentions: 'Excellence en Algorithmique' },
+  { id: '3', year: '2024-2025', school: 'HEC Paris', city: 'Jouy-en-Josas', diploma: 'Master', field: 'MSc Entrepreneurs', status: 'in-progress' },
+  { id: 'ori-1', year: 'Aujourd\'hui', school: 'L\'Étudiant', city: 'En ligne', diploma: 'Génération de Persona IA', field: 'Analyse Cognitive & Soft Skills', status: 'completed', mentions: 'Profil validé à 100%', isOriAction: true },
+];
 
+export default function ParcoursPage() {
+  const [steps, setSteps] = useState<AcademicStep[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [newStep, setNewStep] = useState<Omit<AcademicStep, 'id'>>(EMPTY_STEP);
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
-  const { isProfileComplete } = useProfile();
+  const { isProfileComplete, refreshProfile } = useProfile();
 
   const supabase = createClient();
+
+  const saveStepsToProfile = async (newSteps: AcademicStep[]) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
+      if (!uid || !profileData) return;
+
+      const updatedProfile = {
+        ...profileData,
+        scores: {
+          ...(profileData.scores || {}),
+          education: newSteps
+        }
+      };
+
+      await fetch(apiUrl('/api/profile/'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: uid,
+          ...updatedProfile
+        }),
+      });
+      refreshProfile();
+    } catch (err) {
+      console.error('Error saving steps:', err);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -80,9 +107,16 @@ export default function ParcoursPage() {
           const json = await res.json();
           if (json.status === 'success' && json.data) {
             setProfileData(json.data);
+            if (json.data.scores?.education && json.data.scores.education.length > 0) {
+              setSteps(json.data.scores.education);
+            } else {
+              setSteps(DEFAULT_STEPS);
+            }
           }
         }
-      } catch { /* demo mode */ }
+      } catch { 
+        setSteps(DEFAULT_STEPS);
+      }
       setLoading(false);
     };
     load();
@@ -91,19 +125,32 @@ export default function ParcoursPage() {
   const addStep = () => {
     if (!newStep.year || !newStep.diploma) return;
     const step: AcademicStep = { ...newStep, id: Date.now().toString() };
-    const sorted = [...steps, step].sort((a, b) => {
-      const yA = parseInt(a.year); const yB = parseInt(b.year);
+    const nextSteps = [...steps, step].sort((a, b) => {
+      const yA = parseInt(a.year) || 0; const yB = parseInt(b.year) || 0;
       return yA - yB;
     });
-    setSteps(sorted);
+    setSteps(nextSteps);
+    saveStepsToProfile(nextSteps);
     setNewStep(EMPTY_STEP);
     setAdding(false);
   };
 
-  const removeStep = (id: string) => setSteps(prev => prev.filter(s => s.id !== id));
+  const removeStep = (id: string) => {
+    const nextSteps = steps.filter(s => s.id !== id);
+    setSteps(nextSteps);
+    saveStepsToProfile(nextSteps);
+  };
 
   const updateStep = (id: string, field: keyof AcademicStep, value: string) => {
-    setSteps(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
+    const nextSteps = steps.map(s => s.id === id ? { ...s, [field]: value } : s);
+    setSteps(nextSteps);
+    // Note: We might want to save only when "Enregistrer" is clicked, but the current UI triggers this on change.
+    // For performance, let's keep it simple for now as the user expects it to work.
+  };
+
+  const handleSaveEdit = () => {
+    saveStepsToProfile(steps);
+    setEditing(null);
   };
 
   const completedCount = steps.filter(s => s.status === 'completed').length;
@@ -277,7 +324,7 @@ export default function ParcoursPage() {
                             <Input value={step.mentions || ''} onChange={e => updateStep(step.id, 'mentions', e.target.value)} placeholder="Ex: Mention Très Bien" className="bg-slate-50 border-slate-200 h-10 text-sm" />
                           </div>
                           <div className="sm:col-span-2 flex justify-end">
-                            <Button onClick={() => setEditing(null)} size="sm" className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold gap-1.5">
+                            <Button onClick={handleSaveEdit} size="sm" className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold gap-1.5">
                               <Save className="w-4 h-4" /> Enregistrer
                             </Button>
                           </div>

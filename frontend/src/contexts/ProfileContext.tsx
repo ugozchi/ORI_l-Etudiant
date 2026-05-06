@@ -11,7 +11,7 @@ interface ProfileData {
   interests?: string[];
   strengths?: string[];
   strengths_data?: { name: string; val: number }[];
-  scores?: { logic: number; math: number; softSkills: any };
+  scores?: { logic: number; math: number; softSkills: any; education?: any[] };
   [key: string]: any;
 }
 

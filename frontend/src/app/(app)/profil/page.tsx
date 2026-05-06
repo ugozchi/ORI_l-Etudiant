@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '@/contexts/ProfileContext';
 import { apiUrl } from '@/utils/api';
+import Link from 'next/link';
 
 const INTERESTS_LIST = [
   "Informatique", "Sciences", "Art", "Santé", 
@@ -451,6 +452,15 @@ export default function ProfilePage() {
   const handleFakeBulletinAnalysis = () => {
     setBulletinAnalyzing(true);
     setTimeout(() => {
+      // Mocked extraction from bulletins
+      const mockEducation = [
+        { id: '1', year: '2019-2020', school: 'Institut Catholique de Paris', city: 'Paris', diploma: 'Licence', field: 'Sciences Sociales', status: 'completed' },
+        { id: '2', year: '2020-2024', school: '42', city: 'Paris', diploma: 'Diplôme d\'Ingénieur', field: 'Informatique', status: 'completed', mentions: 'Excellence en Algorithmique' },
+        { id: '3', year: '2024-2025', school: 'HEC Paris', city: 'Jouy-en-Josas', diploma: 'Master', field: 'MSc Entrepreneurs', status: 'in-progress' },
+        { id: 'ori-1', year: 'Aujourd\'hui', school: 'L\'Étudiant', city: 'En ligne', diploma: 'Génération de Persona IA', field: 'Analyse Cognitive & Soft Skills', status: 'completed', mentions: 'Profil validé à 100%', isOriAction: true },
+      ];
+      setScores(prev => ({ ...prev, education: mockEducation }));
+      
       setBulletinAnalyzing(false);
       setStep(2);
     }, 1400);
@@ -877,14 +887,19 @@ export default function ProfilePage() {
 
                   {scores?.education && scores.education.length > 0 && (
                     <div className="bg-white rounded-[2rem] p-8 shadow-xl border border-slate-100">
-                      <h3 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2"><GraduationCap className="w-6 h-6 text-orange-500" /> Parcours Académique</h3>
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-black text-slate-900 flex items-center gap-2"><GraduationCap className="w-6 h-6 text-orange-500" /> Parcours Académique</h3>
+                        <Link href="/parcours" className="text-xs font-bold text-orange-500 hover:underline flex items-center gap-1">
+                          Modifier <ChevronRight className="w-3 h-3" />
+                        </Link>
+                      </div>
                       <div className="space-y-4">
                         {scores.education.map((edu: any, idx: number) => (
                           <div key={idx} className="flex gap-4 items-start">
-                            <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-xs shrink-0 border border-orange-100">{edu.year.split('-')[0]}</div>
+                            <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-xs shrink-0 border border-orange-100">{edu.year.split('-')[0] || '—'}</div>
                             <div>
                               <h4 className="font-bold text-slate-900 text-sm">{edu.school}</h4>
-                              <p className="text-xs text-slate-500 font-medium">{edu.degree}</p>
+                              <p className="text-xs text-slate-500 font-medium">{edu.diploma}</p>
                             </div>
                           </div>
                         ))}

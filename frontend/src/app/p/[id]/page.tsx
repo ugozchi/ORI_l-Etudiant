@@ -151,7 +151,7 @@ export default function PublicProfilePage() {
                     <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-xs shrink-0 border border-orange-100">{edu.year.split('-')[0]}</div>
                     <div>
                       <h4 className="font-bold text-slate-900 text-sm">{edu.school}</h4>
-                      <p className="text-xs text-slate-500 font-medium">{edu.degree}</p>
+                      <p className="text-xs text-slate-500 font-medium">{edu.diploma}</p>
                     </div>
                   </div>
                 ))}
