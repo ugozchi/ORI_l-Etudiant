@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
+import { apiUrl } from '@/utils/api';
 import Link from 'next/link';
 import { useProfile } from '@/contexts/ProfileContext';
 import { LockedOverlay } from '@/components/layout/LockedOverlay';
@@ -51,9 +52,10 @@ const FIELD_OPTIONS = [
 
 export default function ParcoursPage() {
   const [steps, setSteps] = useState<AcademicStep[]>([
-    { id: '1', year: '2021', school: 'Collège Jean Moulin', city: 'Paris', diploma: 'Brevet des Collèges', field: 'Général', status: 'completed', mentions: 'Mention Bien' },
-    { id: '2', year: '2024', school: 'Lycée Louis-le-Grand', city: 'Paris', diploma: 'Baccalauréat Général', field: 'Scientifique (S/Maths-Physique)', status: 'completed', mentions: 'Mention Très Bien' },
-    { id: '3', year: '2024-2025', school: 'À déterminer', city: '', diploma: 'Classe Prépa (CPGE)', field: 'Informatique', status: 'in-progress' },
+    { id: '1', year: '2019-2020', school: 'Institut Catholique de Paris', city: 'Paris', diploma: 'Licence', field: 'Sciences Sociales', status: 'completed' },
+    { id: '2', year: '2020-2024', school: '42', city: 'Paris', diploma: 'Diplôme d\'Ingénieur', field: 'Informatique', status: 'completed', mentions: 'Excellence en Algorithmique' },
+    { id: '3', year: '2024-2025', school: 'HEC Paris', city: 'Jouy-en-Josas', diploma: 'Master', field: 'MSc Entrepreneurs', status: 'in-progress' },
+    { id: '4', year: '2024-2025', school: 'Mines Paris - PSL / Albert School', city: 'Paris', diploma: 'Master', field: 'MSc Data for Finance', status: 'in-progress' },
   ]);
 
   const [editing, setEditing] = useState<string | null>(null);
@@ -70,7 +72,7 @@ export default function ParcoursPage() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         const uid = session?.user?.id || 'demo-user';
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/${uid}`);
+        const res = await fetch(apiUrl(`/api/profile/${uid}`));
         if (res.ok) {
           const json = await res.json();
           if (json.status === 'success' && json.data) {
@@ -366,10 +368,8 @@ export default function ParcoursPage() {
               </div>
             </div>
             <p className="text-slate-300 leading-relaxed font-medium text-sm">
-              Ton parcours montre une progression cohérente avec une orientation vers les filières scientifiques et techniques.
-              {completedCount > 0 && ` Tu as validé ${completedCount} diplôme${completedCount > 1 ? 's' : ''}.`}
-              {currentStep && ` Tu es actuellement en ${currentStep.diploma}.`}
-              {' '}ORI peut t'aider à identifier les meilleures formations qui correspondent à ta trajectoire. Discute avec ORI pour affiner ton orientation.
+              Ton parcours est exceptionnel et démontre une très forte capacité d'adaptation, passant des Sciences Sociales à l'ingénierie informatique de pointe (42), pour finalement te diriger vers l'excellence financière et entrepreneuriale (Mines/HEC/Albert School). 
+              ORI peut t'aider à valoriser cette double compétence Tech/Business unique lors de tes futurs entretiens.
             </p>
             <div className="mt-6">
               <Link href="/chat">
