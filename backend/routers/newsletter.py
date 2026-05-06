@@ -9,73 +9,73 @@ class NewsletterSubscription(BaseModel):
     email: str
     frequency: str
 
-# Base mock articles
+# Base mock articles pour le persona (HEC / Mines / 42)
 MOCK_ARTICLES = [
     {
         "id": "a_1",
-        "title": "Le guide de survie en première année de médecine",
-        "summary": "Tout ce qu'il faut savoir sur l'organisation, le mental et les méthodes de travail pour réussir sa L.A.S / PASS.",
-        "topic": "Santé",
-        "date": "2026-04-20",
+        "title": "L'impact de l'IA Générative dans la modélisation financière en 2026",
+        "summary": "Comment les Quant Analysts et les Data Scientists réinventent les algorithmes de trading grâce aux nouveaux modèles de langage et à Vertex AI.",
+        "topic": "Finance & Tech",
+        "date": "2026-05-02",
         "url": "#",
-        "type": "Témoignage",
-        "image_url": "https://images.unsplash.com/photo-1576091160399-11cb8e25fcaf?q=80&w=800&auto=format&fit=crop"
+        "type": "Article",
+        "image_url": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1200&auto=format&fit=crop"
     },
     {
         "id": "a_2",
-        "title": "Intelligence Artificielle : Les métiers qui recrutent",
-        "summary": "Découvrez comment l'IA transforme le marché du travail et quelles sont les écoles pour s'y préparer dès maintenant.",
-        "topic": "Informatique",
-        "date": "2026-04-25",
+        "title": "Entrepreneuriat : Comment lever ses premiers fonds après un Master ?",
+        "summary": "Les retours d'expérience de 3 alumni HEC Entrepreneurs qui ont levé plus de 5 millions d'euros en Seed l'année dernière.",
+        "topic": "Entrepreneuriat",
+        "date": "2026-05-05",
         "url": "#",
-        "type": "Article",
-        "image_url": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=800&auto=format&fit=crop"
+        "type": "Témoignage",
+        "image_url": "https://images.unsplash.com/photo-1556761175-5973dc0f32d7?q=80&w=1200&auto=format&fit=crop"
     },
     {
         "id": "a_3",
-        "title": "L'Art et le Numérique : Une fusion inédite",
-        "summary": "Pourquoi devenir designer 3D ou UI/UX Designer est le choix idéal pour un créatif de nouvelle génération.",
-        "topic": "Art",
-        "date": "2026-04-22",
+        "title": "Les 10 startups européennes de la Data qui recrutent",
+        "summary": "Une sélection exclusive des entreprises tech à plus forte croissance cherchant activement des profils ingénieurs et business transverses.",
+        "topic": "Carrière",
+        "date": "2026-05-01",
         "url": "#",
-        "type": "Vidéo",
-        "image_url": "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=800&auto=format&fit=crop"
+        "type": "Guide",
+        "image_url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200&auto=format&fit=crop"
     },
     {
         "id": "a_4",
-        "title": "Droit International : Comment construire sa carrière ?",
-        "summary": "Les astuces pour intégrer les meilleurs masters et se préparer aux concours prestigieux.",
-        "topic": "Droit",
-        "date": "2026-04-18",
+        "title": "Masterclass : Stratégies de développement en Python pour la Data",
+        "summary": "Les meilleures pratiques d'architecture logicielle pour scaler vos modèles Machine Learning en production. Focus sur l'écosystème 42.",
+        "topic": "Code & Architecture",
+        "date": "2026-04-28",
         "url": "#",
-        "type": "Article",
-        "image_url": "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=800&auto=format&fit=crop"
+        "type": "Vidéo",
+        "image_url": "https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=1200&auto=format&fit=crop"
     },
     {
         "id": "a_5",
-        "title": "Parcoursup 2026 : Le calendrier officiel",
-        "summary": "Toutes les dates clés à ne pas manquer pour formuler et valider ses vœux d'orientation.",
-        "topic": "Généraliste",
-        "date": "2026-03-10",
+        "title": "La transition des métiers : De l'ingénierie au leadership",
+        "summary": "Comment valoriser son pragmatisme technique pour devenir un leader inspirant au sein d'une organisation tech.",
+        "topic": "Soft Skills",
+        "date": "2026-04-20",
         "url": "#",
-        "type": "Guide",
-        "image_url": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=800&auto=format&fit=crop"
+        "type": "Article",
+        "image_url": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1200&auto=format&fit=crop"
     },
     {
         "id": "a_6",
-        "title": "Trouver son école d'ingénieurs post-bac",
-        "summary": "Concours Advance, Geipi Polytech, Avenir... Décryptage des concours pour ne faire aucune erreur.",
-        "topic": "Ingénierie",
-        "date": "2026-04-21",
+        "title": "Le futur du Venture Capital en Europe",
+        "summary": "Décryptage des tendances d'investissement pour le prochain semestre. Oubliez la crypto, l'heure est aux CleanTech et à l'IA.",
+        "topic": "Analyse Marché",
+        "date": "2026-04-15",
         "url": "#",
         "type": "Article",
-        "image_url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=800&auto=format&fit=crop"
+        "image_url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1200&auto=format&fit=crop"
     }
 ]
 
-# Simuler un profil utilisateur
+# Simuler un profil utilisateur basé sur Ugo
 MOCK_USER_PROFILE = {
-    "interests": ["Informatique", "Art", "Généraliste"]
+    "interests": ["Finance & Tech", "Entrepreneuriat", "Carrière", "Code & Architecture"]
 }
 
 @router.get("/preview/{user_id}")
@@ -95,7 +95,7 @@ def get_newsletter_preview(user_id: str) -> Dict[str, Any]:
     # Mettre en avant ceux qui matchent le plus, puis compléter
     final_selection = scored_articles + default_articles
     
-    return {"status": "success", "data": final_selection[:4]} # Return top 4
+    return {"status": "success", "data": final_selection} # Return all 6
 
 @router.post("/subscribe")
 def subscribe_newsletter(sub: NewsletterSubscription) -> Dict[str, str]:

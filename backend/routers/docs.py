@@ -11,6 +11,7 @@ class DocRequest(BaseModel):
     doc_type: str # "cv", "cover_letter", "parcoursup"
     target_school: Optional[str] = None
     target_program: Optional[str] = None
+    additional_info: Optional[str] = None
 
 @router.post("/generate")
 def generate_doc(request: DocRequest) -> Dict[str, Any]:
@@ -65,12 +66,20 @@ def generate_doc(request: DocRequest) -> Dict[str, Any]:
     if request.target_program:
         target_info += f" en {request.target_program}"
 
+    extra_info_str = ""
+    if request.additional_info:
+        extra_info_str = f"\nL'étudiant a également fourni ces directives spécifiques : '{request.additional_info}'. Prends-les absolument en compte.\n"
+
     prompt = (
         f"Tu es un expert en recrutement et en orientation scolaire. "
         f"Ta mission est de rédiger {doc_desc}{target_info} pour un étudiant. "
-        f"\n\nVoici le profil très détaillé de l'étudiant, incluant ses formations passées et son analyse cognitive : [{profile_ctx}].\n\n"
+        f"\n\nVoici le profil très détaillé de l'étudiant, incluant ses formations passées et son analyse cognitive : [{profile_ctx}].\n"
+        f"{extra_info_str}\n"
         f"Rédige le document final de manière professionnelle, structurée, mais authentique (prête à être copiée-collée). "
-        f"N'inclus AUCUN message d'introduction ou de politesse comme 'Voici votre lettre', donne uniquement le contenu du document demandé."
+        f"IMPORTANT : Tu dois impérativement générer le résultat en TEXTE BRUT (PLAIN TEXT). "
+        f"N'utilise ABSOLUMENT AUCUNE balise Markdown (pas de *, pas de #, pas de _, pas de mots en gras ou italique). "
+        f"Utilise uniquement des retours à la ligne pour aérer et structurer ton texte. "
+        f"N'inclus AUCUN message d'introduction ou de politesse comme 'Voici votre lettre', donne uniquement le contenu brut du document demandé."
     )
 
     # 3. Appel à Vertex AI (Via ori_client)

@@ -15,6 +15,7 @@ export default function DocsPage() {
   const [docType, setDocType] = useState('cover_letter');
   const [targetSchool, setTargetSchool] = useState('');
   const [targetProgram, setTargetProgram] = useState('');
+  const [additionalInfo, setAdditionalInfo] = useState('');
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState('');
   
@@ -37,7 +38,8 @@ export default function DocsPage() {
           user_id: uid,
           doc_type: docType,
           target_school: targetSchool,
-          target_program: targetProgram
+          target_program: targetProgram,
+          additional_info: additionalInfo
         })
       });
       
@@ -139,6 +141,14 @@ export default function DocsPage() {
                 value={targetProgram} onChange={e => setTargetProgram(e.target.value)} 
                 placeholder="Ex: BUT Informatique, Licence Bio..." 
                 className="bg-white border-slate-200 text-slate-900 focus-visible:ring-orange-500 h-12 shadow-sm rounded-xl" 
+              />
+            </div>
+            <div className="space-y-2 flex flex-col">
+              <label className="text-sm font-semibold text-slate-900">Directives supplémentaires (Optionnel)</label>
+              <textarea 
+                value={additionalInfo} onChange={e => setAdditionalInfo(e.target.value)} 
+                placeholder="Ex: Mets en avant mon stage chez Google, utilise un ton très formel, précise que je suis disponible immédiatement..." 
+                className="bg-white border border-slate-200 text-slate-900 focus-visible:ring-orange-500 focus-visible:outline-none p-3 shadow-sm rounded-xl resize-none h-24 text-sm" 
               />
             </div>
           </div>

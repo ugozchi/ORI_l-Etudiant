@@ -25,6 +25,7 @@ interface AcademicStep {
   field: string;
   status: 'completed' | 'in-progress' | 'planned';
   mentions?: string;
+  isOriAction?: boolean;
 }
 
 const EMPTY_STEP: Omit<AcademicStep, 'id'> = {
@@ -56,6 +57,8 @@ export default function ParcoursPage() {
     { id: '2', year: '2020-2024', school: '42', city: 'Paris', diploma: 'Diplôme d\'Ingénieur', field: 'Informatique', status: 'completed', mentions: 'Excellence en Algorithmique' },
     { id: '3', year: '2024-2025', school: 'HEC Paris', city: 'Jouy-en-Josas', diploma: 'Master', field: 'MSc Entrepreneurs', status: 'in-progress' },
     { id: '4', year: '2024-2025', school: 'Mines Paris - PSL / Albert School', city: 'Paris', diploma: 'Master', field: 'MSc Data for Finance', status: 'in-progress' },
+    { id: 'ori-1', year: 'Aujourd\'hui', school: 'L\'Étudiant', city: 'En ligne', diploma: 'Génération de Persona IA', field: 'Analyse Cognitive & Soft Skills', status: 'completed', mentions: 'Profil validé à 100%', isOriAction: true },
+    { id: 'ori-2', year: 'Bientôt', school: 'Salon L\'Étudiant', city: 'Paris Porte de Versailles', diploma: 'Réservation de Billet VIP', field: 'Rencontre Écoles (HEC & Mines)', status: 'planned', mentions: 'Recommandé par ORI', isOriAction: true },
   ]);
 
   const [editing, setEditing] = useState<string | null>(null);
@@ -188,11 +191,15 @@ export default function ParcoursPage() {
                   </div>
 
                   {/* Card */}
-                  <div className={cn("bg-white rounded-2xl border shadow-sm hover:shadow-md transition-shadow overflow-hidden", config.border)}>
+                  <div className={cn("bg-white rounded-2xl border shadow-sm hover:shadow-md transition-shadow overflow-hidden", step.isOriAction ? 'border-orange-300 shadow-orange-500/10' : config.border)}>
                     {/* Card header */}
                     <div className="flex items-center justify-between p-5 pb-0">
                       <div className="flex items-center gap-3">
-                        <span className={cn("px-2.5 py-1 rounded-lg text-xs font-bold", config.bg, config.color)}>{config.label}</span>
+                        {step.isOriAction ? (
+                          <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-orange-500 text-white flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Action ORI</span>
+                        ) : (
+                          <span className={cn("px-2.5 py-1 rounded-lg text-xs font-bold", config.bg, config.color)}>{config.label}</span>
+                        )}
                         <span className="text-sm font-bold text-slate-400 flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5" /> {step.year}
                         </span>
@@ -215,7 +222,7 @@ export default function ParcoursPage() {
                           <p className="text-sm font-medium text-slate-500 mb-3">{step.field}</p>
                           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
                             <span className="flex items-center gap-1.5 font-medium">
-                              <School className="w-4 h-4 text-slate-400" /> {step.school}
+                              {step.isOriAction ? <Sparkles className="w-4 h-4 text-orange-400" /> : <School className="w-4 h-4 text-slate-400" />} {step.school}
                             </span>
                             {step.city && (
                               <span className="flex items-center gap-1.5 font-medium">

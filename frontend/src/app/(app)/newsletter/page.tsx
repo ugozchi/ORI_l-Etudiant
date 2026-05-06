@@ -10,6 +10,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '@/contexts/ProfileContext';
 import { LockedOverlay } from '@/components/layout/LockedOverlay';
 
+import { apiUrl } from '@/utils/api';
+import Link from 'next/link';
+
 type Article = {
   id: string;
   title: string;
@@ -17,7 +20,7 @@ type Article = {
   topic: string;
   date: string;
   url: string;
-  type: 'Article' | 'Vidéo' | 'Témoignage' | 'Guide';
+  type: 'Article' | 'Vidéo' | 'Témoignage' | 'Guide' | 'Analyse';
   image_url: string;
 };
 
@@ -44,7 +47,7 @@ export default function NewsletterPage() {
         setUserId(id);
         if (session?.user?.email) setEmail(session.user.email);
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/newsletter/preview/${id}`);
+        const res = await fetch(apiUrl(`/api/newsletter/preview/${id}`));
         const json = await res.json();
         
         if (json.status === 'success') {
@@ -66,7 +69,7 @@ export default function NewsletterPage() {
     
     setSubscribing(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/newsletter/subscribe`, {
+      const res = await fetch(apiUrl('/api/newsletter/subscribe'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -93,39 +96,39 @@ export default function NewsletterPage() {
       const moreArticles: Article[] = [
         {
           id: `new-${Date.now()}-1`,
-          title: "Les métiers de l'IA en 2026 : Au-delà de la hype",
-          summary: "Découvre les vraies opportunités de carrière dans l'Intelligence Artificielle et le Machine Learning pour les jeunes diplômés.",
-          topic: "Tech & Futur",
+          title: "Les algorithmes de pricing en temps réel chez LVMH",
+          summary: "Comment l'industrie du luxe utilise désormais la data science pour optimiser ses marges mondiales.",
+          topic: "Data & Luxe",
           date: new Date().toISOString(),
           url: "#",
-          type: "Article",
-          image_url: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=800&auto=format&fit=crop"
+          type: "Analyse",
+          image_url: "https://images.unsplash.com/photo-1549439602-43ebca2327af?q=80&w=800&auto=format&fit=crop"
         },
         {
           id: `new-${Date.now()}-2`,
-          title: "Témoignage : Mon année de césure humanitaire au Pérou",
-          summary: "Comment une césure m'a permis de me recentrer et de trouver ma voie d'ingénieur éco-responsable.",
-          topic: "Soft Skills",
+          title: "Témoignage : De 42 à CTO d'une FinTech à Londres",
+          summary: "Le parcours atypique de Julien, qui a su allier l'exigence du code à la vision stratégique financière.",
+          topic: "Carrière",
           date: new Date().toISOString(),
           url: "#",
           type: "Témoignage",
-          image_url: "https://images.unsplash.com/photo-1526976663186-ea62c961e6c3?q=80&w=800&auto=format&fit=crop"
+          image_url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=800&auto=format&fit=crop"
         },
         {
           id: `new-${Date.now()}-3`,
-          title: "Le Guide Ultime des Concours Post-Bac",
-          summary: "Tout ce qu'il faut savoir pour réussir les concours Avenir, Puissance Alpha et Advance.",
-          topic: "Préparation",
+          title: "Le Guide Ultime des certifications Cloud (AWS/GCP)",
+          summary: "Quelles certifications passer en 2026 pour maximiser son attractivité auprès des grands fonds d'investissement.",
+          topic: "Architecture",
           date: new Date().toISOString(),
           url: "#",
           type: "Guide",
-          image_url: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=800&auto=format&fit=crop"
+          image_url: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800&auto=format&fit=crop"
         },
         {
           id: `new-${Date.now()}-4`,
-          title: "Pourquoi l'intelligence émotionnelle est le skill #1",
-          summary: "Les recruteurs recherchent de plus en plus de soft skills. Apprends à cultiver ton intelligence émotionnelle.",
-          topic: "Carrière",
+          title: "L'art de la négociation : Soft Skills pour ingénieurs",
+          summary: "Pourquoi savoir coder ne suffit plus. Apprends à négocier ton package salarial comme un HEC.",
+          topic: "Soft Skills",
           date: new Date().toISOString(),
           url: "#",
           type: "Vidéo",
@@ -150,77 +153,87 @@ export default function NewsletterPage() {
     <div className="min-h-full bg-slate-50 overflow-y-auto relative">
       {!isProfileComplete && <LockedOverlay />}
       
-      {/* Heroic Subscription Banner */}
-      <section className="relative px-6 py-20 md:py-32 border-b border-slate-200 overflow-hidden bg-slate-900">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5" />
-        <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-[600px] h-[600px] bg-orange-500/20 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-[500px] h-[500px] bg-blue-500/20 blur-[120px] rounded-full pointer-events-none" />
+      {/* Premium Hero Section */}
+      <section className="relative px-6 py-20 md:py-32 overflow-hidden bg-[#0A0F1C] border-b border-white/5">
+        {/* Deep tech background effects */}
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20" />
+        <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[800px] h-[800px] bg-indigo-500/10 blur-[150px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[600px] h-[600px] bg-orange-500/15 blur-[120px] rounded-full pointer-events-none" />
         
-        <div className="relative max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+        <div className="relative max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-20">
           <div className="flex-1 text-center lg:text-left space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-orange-400 text-xs font-bold tracking-wider uppercase shadow-xl">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} 
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-orange-400 text-xs font-bold tracking-widest uppercase shadow-2xl"
+            >
               <Sparkles className="w-4 h-4" />
-              Intelligence Artificielle
-            </div>
+              Intelligence Exécutive
+            </motion.div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
-              L'orientation qui vient <br className="hidden md:block" /> 
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">
-                directement à toi.
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.15]"
+            >
+              L'information stratégique, <br className="hidden md:block" /> 
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-orange-500">
+                directement à la source.
               </span>
-            </h1>
+            </motion.h1>
             
-            <p className="text-lg text-slate-300 max-w-xl mx-auto lg:mx-0 font-medium leading-relaxed">
-              Chaque semaine, reçois une sélection d'articles, vidéos et opportunités choisis par ORI uniquement pour ton profil.
-            </p>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              className="text-lg text-slate-300 max-w-xl mx-auto lg:mx-0 font-medium leading-relaxed"
+            >
+              Finance, Data, Entrepreneuriat. Chaque semaine, l'IA ORI analyse des milliers de sources pour ne te livrer que les insights qui propulseront ta carrière.
+            </motion.p>
           </div>
 
-          <div className="w-full max-w-md relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
+            className="w-full max-w-md relative z-10"
+          >
             {/* Glowing border effect */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-orange-300 rounded-[2rem] blur opacity-30 animate-pulse" />
+            <div className="absolute -inset-0.5 bg-gradient-to-br from-orange-500/50 via-indigo-500/30 to-orange-500/50 rounded-[2rem] blur-md opacity-50 animate-pulse" />
             
-            <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
+            <div className="bg-[#111827]/80 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-32 bg-orange-500/10 blur-[50px] rounded-full pointer-events-none" />
+              
               {subscribed ? (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="py-8 flex flex-col items-center text-center space-y-4"
-                >
-                  <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center shadow-sm border border-green-500/30">
-                    <CheckCircle2 className="w-8 h-8 text-green-400" />
+                <div className="py-8 flex flex-col items-center text-center space-y-4 relative z-10">
+                  <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center shadow-inner border border-emerald-500/30">
+                    <CheckCircle2 className="w-8 h-8 text-emerald-400" />
                   </div>
-                  <h3 className="text-2xl font-black text-white">Inscription Réussie !</h3>
-                  <p className="text-slate-300 font-medium">Tu recevras ta première newsletter sur {email} très bientôt.</p>
-                </motion.div>
+                  <h3 className="text-2xl font-black text-white">Accès Premium Activé</h3>
+                  <p className="text-slate-300 font-medium text-sm leading-relaxed">Ta sélection Executive Insights arrivera très bientôt sur l'adresse : <br/><span className="text-white font-bold">{email}</span></p>
+                </div>
               ) : (
-                <form onSubmit={handleSubscribe} className="space-y-6">
+                <form onSubmit={handleSubscribe} className="space-y-6 relative z-10">
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-white uppercase tracking-wider">Mon e-mail</label>
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Adresse E-mail</label>
                     <div className="relative">
-                      <Mail className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                       <Input 
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="etudiant@ecole.com"
-                        className="pl-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 h-14 shadow-inner rounded-xl font-medium text-base transition-colors"
+                        placeholder="ugo.zanchi@hec.edu"
+                        className="pl-12 bg-black/40 border-white/10 text-white placeholder:text-slate-600 focus-visible:ring-orange-500 focus-visible:border-orange-500 h-14 shadow-inner rounded-xl font-medium text-base transition-colors"
                         required
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-white uppercase tracking-wider">Fréquence</label>
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Fréquence des Insights</label>
                     <div className="flex gap-3">
                       <button 
                         type="button"
                         onClick={() => setFrequency('hebdo')}
                         className={cn(
-                          "flex-1 py-3.5 rounded-xl text-sm font-bold transition-all border-2",
+                          "flex-1 py-3.5 rounded-xl text-sm font-bold transition-all border",
                           frequency === 'hebdo' 
-                            ? "bg-orange-500 text-white border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]" 
-                            : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
+                            ? "bg-gradient-to-b from-orange-500 to-orange-600 text-white border-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.3)]" 
+                            : "bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:text-white"
                         )}
                       >
                         Hebdomadaire
@@ -229,10 +242,10 @@ export default function NewsletterPage() {
                         type="button"
                         onClick={() => setFrequency('mensuel')}
                         className={cn(
-                          "flex-1 py-3.5 rounded-xl text-sm font-bold transition-all border-2",
+                          "flex-1 py-3.5 rounded-xl text-sm font-bold transition-all border",
                           frequency === 'mensuel' 
-                            ? "bg-orange-500 text-white border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]" 
-                            : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
+                            ? "bg-gradient-to-b from-orange-500 to-orange-600 text-white border-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.3)]" 
+                            : "bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:text-white"
                         )}
                       >
                         Mensuelle
@@ -242,19 +255,19 @@ export default function NewsletterPage() {
 
                   <Button 
                     type="submit" 
-                    className="w-full h-14 bg-white text-slate-900 hover:bg-slate-100 font-black rounded-xl shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all text-base hover:scale-[1.02] active:scale-[0.98]"
+                    className="w-full h-14 bg-white text-slate-900 hover:bg-slate-200 font-black rounded-xl shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all text-base hover:scale-[1.02] active:scale-[0.98] mt-2"
                     disabled={subscribing || !email}
                   >
                     {subscribing ? (
-                      <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Inscription...</>
+                      <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Activation...</>
                     ) : (
-                      <><Send className="mr-2 h-5 w-5 text-orange-500" /> S'abonner maintenant</>
+                      <><Send className="mr-2 h-5 w-5 text-orange-500" /> Déverrouiller les Insights</>
                     )}
                   </Button>
                 </form>
               )}
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -262,8 +275,8 @@ export default function NewsletterPage() {
       <section className="px-6 py-16 md:py-24 max-w-7xl mx-auto">
         <div className="mb-12 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Un aperçu pour toi</h2>
-            <p className="text-slate-500 font-medium text-lg">Ces contenus ont été sélectionnés par ORI basé sur tes affinités actuelles.</p>
+            <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Executive Selection</h2>
+            <p className="text-slate-500 font-medium text-lg">Curated par l'IA d'Alberthon en fonction de tes performances quantitatives et entrepreneuriales.</p>
           </div>
           <Button 
             onClick={handleLoadMore}
@@ -295,10 +308,10 @@ export default function NewsletterPage() {
                   {/* Image Card header */}
                   <div className="relative h-56 overflow-hidden bg-slate-100">
                     <div 
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110"
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                       style={{ backgroundImage: `url(${article.image_url})` }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0A0F1C] via-transparent to-transparent opacity-80" />
                     
                     {/* Topic Badge */}
                     <div className="absolute top-5 left-5 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-sm">
@@ -313,7 +326,7 @@ export default function NewsletterPage() {
                       {article.type}
                     </div>
                     
-                    <h3 className="text-xl font-black text-slate-900 leading-tight mb-3 group-hover:text-orange-500 transition-colors line-clamp-2">
+                    <h3 className="text-xl font-black text-slate-900 leading-[1.3] mb-3 group-hover:text-orange-500 transition-colors line-clamp-3">
                       {article.title}
                     </h3>
                     
@@ -382,7 +395,7 @@ export default function NewsletterPage() {
                       {new Date(selectedArticle.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
                   </div>
-                  <h2 className="text-2xl md:text-4xl font-black text-white leading-tight drop-shadow-md">
+                  <h2 className="text-3xl md:text-5xl font-black text-white leading-[1.1] drop-shadow-2xl">
                     {selectedArticle.title}
                   </h2>
                 </div>
@@ -395,25 +408,24 @@ export default function NewsletterPage() {
                     {selectedArticle.summary}
                   </p>
                   
-                  {/* Faux contenu généré pour la démo */}
-                  <div className="space-y-6 text-slate-700 leading-relaxed">
+                  <div className="space-y-6 text-slate-700 leading-relaxed text-lg font-serif">
                     <p>
-                      Dans le cadre de l'évolution rapide des technologies et des méthodes de travail, ce sujet devient central pour les étudiants d'aujourd'hui. Les attentes des entreprises se transforment, et la maîtrise de ces concepts clés est devenue un atout majeur pour se démarquer.
+                      Dans le cadre de l'évolution rapide des technologies (LLMs, RAG, Architectures distribuées) et des marchés financiers, la fusion entre l'ingénierie logicielle avancée et la vision stratégique devient l'atout numéro un des profils de demain.
                     </p>
-                    <h3 className="text-xl font-bold text-slate-900 mt-8 mb-4">Pourquoi c'est important pour ton profil ?</h3>
+                    <h3 className="text-2xl font-black text-slate-900 mt-10 mb-6 font-sans">L'Analyse Executive</h3>
                     <p>
-                      D'après l'analyse de ton Persona par l'IA d'ORI, tu as un profil très orienté vers la résolution de problèmes complexes. T'intéresser à cette thématique te permettra non seulement d'élargir ta vision globale du marché, mais aussi de connecter tes compétences techniques avec de réels besoins sociétaux.
+                      D'après l'analyse de ton Persona cognitif (Pragmatisme élevé, forte capacité algorithmique), tu fais partie du décile supérieur capable d'allier exécution technique brute (modèle 42) et abstraction stratégique (modèle HEC/Mines). 
                     </p>
-                    <div className="bg-orange-50 border border-orange-100 rounded-2xl p-6 my-8">
-                      <h4 className="font-bold text-orange-900 mb-2 flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-orange-500" /> Conseil de l'IA ORI
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200/60 rounded-3xl p-8 my-10 shadow-inner">
+                      <h4 className="font-black text-orange-900 mb-3 flex items-center gap-2 font-sans text-xl">
+                        <Sparkles className="w-6 h-6 text-orange-500" /> Le Conseil d'Alberthon
                       </h4>
-                      <p className="text-orange-800 text-sm">
-                        Garde un œil sur les écoles spécialisées dans ce domaine. Nous avons noté une augmentation de 40% des recrutements à la sortie de ces cursus l'année dernière. Pense à en parler lors des prochains salons de l'Étudiant.
+                      <p className="text-orange-800 text-base font-sans font-medium leading-relaxed">
+                        Le marché du Venture Capital recherche actuellement des profils capables d'auditer techniquement des startups DeepTech tout en comprenant les modèles de revenus. Positionne-toi sur le croisement Data/Finance lors des prochains événements de networking. Ta valeur ajoutée réside dans cette intersection rare.
                       </p>
                     </div>
                     <p>
-                      Les prochaines étapes pour toi consisteraient à approfondir ce sujet via des projets associatifs ou des MOOCs. Cela renforcera considérablement ton dossier lors de tes vœux d'orientation ou de tes recherches de stages.
+                      Il est fortement recommandé de développer des projets open-source ou des white papers démontrant ta capacité à appliquer l'IA générative sur des datasets financiers réels pour attirer l'attention des fonds d'investissement dès ta sortie d'école.
                     </p>
                   </div>
                 </div>
