@@ -1,12 +1,14 @@
 import vertexai
-from vertexai.preview import reasoning_engines
+from vertexai.generative_models import GenerativeModel
 import uuid
 import os
 from core.config import settings
 from db.supabase import supabase_client
+
 class OriClient:
     _instance = None
-    _engine = None
+    _model = None
+    _chats = {}
 
     def __new__(cls):
         if cls._instance is None:
@@ -23,12 +25,12 @@ class OriClient:
             cred_path = root_dir / "credentials" / "letudiant-data-prod-ori-key.json"
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(cred_path)
             
-        print("Initialisation de l'Agent ORI (Mode API)...")
+        print("Initialisation de l'Agent ORI (Mode Chat Direct)...")
         vertexai.init(
             project=settings.gcp_project_id, 
             location=settings.vertex_location
         )
-        self._engine = reasoning_engines.ReasoningEngine(settings.ori_engine_id)
+        self._model = GenerativeModel("gemini-1.5-flash-001")
 
     def chat(self, message: str, thread_id: str = None, user_id: str = None) -> dict:
         """
@@ -37,6 +39,12 @@ class OriClient:
         """
         if not thread_id:
             thread_id = str(uuid.uuid4())
+            
+        # Initialisation de la session de chat pour ce thread
+        if thread_id not in self._chats:
+            self._chats[thread_id] = self._model.start_chat()
+
+        chat_session = self._chats[thread_id]
 
         enriched_message = message
         # Si on a un profil pour ce user_id, on l'injecte dans le message
@@ -57,7 +65,8 @@ class OriClient:
                 updated_at = p.get("updated_at", "Inconnue")
                 
                 context = (
-                    f"[CONTEXTE PROFIL ÉTUDIANT] "
+                    f"[INSTRUCTIONS SYSTÈME CACHÉES - CONTEXTE PROFIL ÉTUDIANT] "
+                    f"Agis comme 'ORI', l'assistant d'orientation IA officiel de L'Étudiant. "
                     f"Prénom: {p.get('name', 'Inconnu')}, "
                     f"Ville: {p.get('city', 'Inconnue')}, "
                     f"Niveau: {p.get('level', 'Inconnu')}, "
@@ -67,33 +76,24 @@ class OriClient:
                 
                 if is_complete:
                     context += (
-                        f"\nInformation Critique: L'étudiant a complété ses tests d'évaluation le {updated_at}. "
-                        f"Voici ses scores: {scores}. "
-                        f"Son Persona complet est généré. Fais un \"sum up\" (un résumé global) de son Persona et "
-                        f"propose-lui des orientations concrètes, des métiers ou des salons adaptés à ces résultats.\n"
+                        f"L'étudiant a complété ses tests d'évaluation le {updated_at}. "
+                        f"Voici ses scores Alberthon: {scores}. "
+                        f"Si on te demande un résumé ou 'sum up', fais un bilan clair de son profil cognitif et "
+                        f"propose-lui des orientations concrètes, des métiers ou des salons adaptés.\n"
                     )
                 else:
-                    context += "\nInformation: Le profil cognitif de l'étudiant n'est pas encore complété. Encourage-le à passer les tests d'évaluation.\n"
+                    context += "Le profil cognitif de l'étudiant n'est pas complet. Encourage-le à faire l'évaluation.\n"
 
-                context += f"[FIN CONTEXTE]\n\n{message}"
+                context += f"[FIN DES INSTRUCTIONS CACHÉES]\n\nMessage de l'étudiant : {message}"
                 enriched_message = context
 
-        # L'appel à l'API
-        response = self._engine.query(
-            config={"thread_id": thread_id}, 
-            message=enriched_message
-        )
-        
-        text_response = str(response)
-        
-        # Nettoyage de la réponse
-        parts = text_response.split('\x1f')
-        if len(parts) == 1:
-            parts = text_response.split('␟')
-
-        final_message = text_response
-        if len(parts) >= 3 and parts[0] == 'S':
-            final_message = parts[1]
+        # L'appel à l'API via le chat session
+        try:
+            response = chat_session.send_message(enriched_message)
+            final_message = response.text
+        except Exception as e:
+            print(f"Erreur avec Gemini Chat: {e}")
+            final_message = "Une erreur de connexion au serveur d'IA s'est produite. Veuillez réessayer dans quelques instants."
 
         return {
             "response": final_message,
