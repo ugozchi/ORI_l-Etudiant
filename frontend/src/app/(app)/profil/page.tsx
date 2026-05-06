@@ -78,7 +78,7 @@ export default function ProfilePage() {
   const [gameIndex, setGameIndex] = useState(0); // 0: Logic/Mem, 1: Math/Res, 2: Soft Skills, 3: Results
   const [subGame, setSubGame] = useState<'A' | 'B'>('A');
   const [gameTimer, setGameTimer] = useState(120);
-  const [scores, setScores] = useState({ 
+  const [scores, setScores] = useState<{ logic: number; math: number; softSkills: any; education?: any[] }>({ 
     logic: 0, 
     math: 0, 
     softSkills: { pragmatism: 0, creativity: 0, leadership: 0, empathy: 0 } 
