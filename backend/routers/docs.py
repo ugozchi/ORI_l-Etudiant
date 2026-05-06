@@ -87,60 +87,22 @@ def generate_doc(request: DocRequest) -> Dict[str, Any]:
         f"- Ne fais JAMAIS d'introduction conversationnelle ('Voici votre document...'). Commence directement par le contenu demandé."
     )
 
-    # 3. Génération
-    # On va utiliser directement le modèle génératif de Vertex pour éviter les timeouts du Reasoning Engine (ORI)
+    # 3. Génération via l'agent ORI (Reasoning Engine)
     try:
-        from vertexai.generative_models import GenerativeModel
-        from core.config import settings
-        import vertexai
-        import os
-        from pathlib import Path
-        
-        if "GOOGLE_APPLICATION_CREDENTIALS" not in os.environ:
-            root_dir = Path(__file__).resolve().parent.parent.parent
-            cred_path = root_dir / "credentials" / "letudiant-data-prod-ori-key.json"
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(cred_path)
-        
-        # Initialisation rapide au cas où
-        vertexai.init(project=settings.gcp_project_id, location=settings.vertex_location)
-        
-        # Utilisation de gemini-1.5-flash pour sa vitesse et sa fiabilité
-        model = GenerativeModel("gemini-1.5-flash-001")
-        response = model.generate_content(prompt)
-        doc_content = response.text
+        from services.ori_client import ori_client
+        result = ori_client.chat(
+            message=prompt,
+            user_id=user_id
+        )
+        doc_content = result["response"]
         
     except Exception as e:
-        print(f"Erreur avec Vertex AI GenerativeModel : {e}. Utilisation du fallback.")
-        # Fallback ultra-robuste pour la démo en cas de problème réseau
-        
-        # Extraction sécurisée des variables
+        print(f"Erreur avec Agent ORI : {e}. Utilisation du fallback.")
+        # Fallback ultra-robuste
         school_str = request.target_school if request.target_school else 'votre établissement'
         prog_str = request.target_program if request.target_program else 'votre formation'
         
-        # Sécurisation du nom et des infos
-        student_name = "L'étudiant"
-        student_strengths = "Grande adaptabilité et esprit d'analyse"
-        student_interests = "l'innovation et le développement"
-        
-        try:
-            if profile_resp and profile_resp.data:
-                p_data = profile_resp.data[0]
-                student_name = p_data.get('name', student_name)
-                student_strengths = ", ".join(p_data.get("strengths", [])) or student_strengths
-                student_interests = ", ".join(p_data.get("interests", [])) or student_interests
-        except:
-            pass
-            
-        doc_content = f"Objet : Candidature pour {prog_str} à {school_str}\n\n"
-        doc_content += f"Madame, Monsieur,\n\n"
-        doc_content += f"Actuellement en plein développement de mon projet académique et professionnel, je vous adresse ma candidature. "
-        doc_content += f"Mon parcours m'a permis d'acquérir de solides bases, notamment soulignées par mon profil cognitif : {student_strengths}.\n\n"
-        
-        if request.additional_info:
-            doc_content += f"Conformément à mes objectifs récents : {request.additional_info}.\n\n"
-            
-        doc_content += f"Intégrer {school_str} représente pour moi une opportunité unique de lier mon appétence pour {student_interests} avec une formation d'excellence.\n\n"
-        doc_content += f"Je me tiens à votre disposition pour un entretien.\n\nCordialement,\n{student_name}"
+        doc_content = f"Objet : Candidature pour {prog_str} à {school_str}\n\nMadame, Monsieur,\n\nActuellement en plein développement de mon projet académique, je vous adresse ma candidature..."
 
     return {
         "status": "success",
