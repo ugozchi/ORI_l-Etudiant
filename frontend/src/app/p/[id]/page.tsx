@@ -141,6 +141,23 @@ export default function PublicProfilePage() {
               )}
             </div>
           </div>
+
+          {profile.scores?.education && profile.scores.education.length > 0 && (
+            <div className="mt-8 pt-8 border-t border-slate-100">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Parcours Académique</h3>
+              <div className="space-y-4">
+                {profile.scores.education.map((edu: any, idx: number) => (
+                  <div key={idx} className="flex gap-4 items-start">
+                    <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-xs shrink-0 border border-orange-100">{edu.year.split('-')[0]}</div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">{edu.school}</h4>
+                      <p className="text-xs text-slate-500 font-medium">{edu.degree}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* AI Insight Section */}

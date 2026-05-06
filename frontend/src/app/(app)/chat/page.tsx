@@ -127,7 +127,9 @@ Ton profil est actuellement rempli à **${completionPercentage}%**. Pour que je 
 
 **→ Compléter mon profil**
 **→ Ou me poser directement une question**`
-        : "Rebonjour ! 👋 Je suis ORI, ton conseiller d'orientation. Comment puis-je t'aider aujourd'hui ?";
+        : `Bonjour ${profile?.name?.split(' ')[0] || ''} ! 👋 Ton profil Persona est désormais généré et analysé !
+
+Je vois que tu as un profil très intéressant, marqué par tes expériences. N'hésite pas à me demander de te faire un "sum up" de ton profil et de te suggérer des salons ou des métiers adaptés à tes excellents résultats !`;
       
       return [{
         id: 'welcome',
