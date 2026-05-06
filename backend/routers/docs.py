@@ -100,14 +100,35 @@ def generate_doc(request: DocRequest) -> Dict[str, Any]:
     except Exception as e:
         print(f"Erreur avec Vertex AI GenerativeModel : {e}. Utilisation du fallback.")
         # Fallback ultra-robuste pour la démo en cas de problème réseau
-        doc_content = f"Objet : Candidature pour {request.target_program or 'votre formation'} à {request.target_school or 'votre établissement'}\n\n"
+        
+        # Extraction sécurisée des variables
+        school_str = request.target_school if request.target_school else 'votre établissement'
+        prog_str = request.target_program if request.target_program else 'votre formation'
+        
+        # Sécurisation du nom et des infos
+        student_name = "L'étudiant"
+        student_strengths = "Grande adaptabilité et esprit d'analyse"
+        student_interests = "l'innovation et le développement"
+        
+        try:
+            if profile_resp and profile_resp.data:
+                p_data = profile_resp.data[0]
+                student_name = p_data.get('name', student_name)
+                student_strengths = ", ".join(p_data.get("strengths", [])) or student_strengths
+                student_interests = ", ".join(p_data.get("interests", [])) or student_interests
+        except:
+            pass
+            
+        doc_content = f"Objet : Candidature pour {prog_str} à {school_str}\n\n"
         doc_content += f"Madame, Monsieur,\n\n"
         doc_content += f"Actuellement en plein développement de mon projet académique et professionnel, je vous adresse ma candidature. "
-        doc_content += f"Mon parcours m'a permis d'acquérir de solides bases, notamment soulignées par mon profil cognitif : {strengths if 'strengths' in locals() else 'Grande adaptabilité'}.\n\n"
+        doc_content += f"Mon parcours m'a permis d'acquérir de solides bases, notamment soulignées par mon profil cognitif : {student_strengths}.\n\n"
+        
         if request.additional_info:
             doc_content += f"Conformément à mes objectifs récents : {request.additional_info}.\n\n"
-        doc_content += f"Intégrer {request.target_school or 'votre établissement'} représente pour moi une opportunité unique de lier mon appétence pour {interests if 'interests' in locals() else 'l\'innovation'} avec une formation d'excellence.\n\n"
-        doc_content += f"Je me tiens à votre disposition pour un entretien.\n\nCordialement,\n{p.get('name') if 'p' in locals() else 'L\'étudiant'}"
+            
+        doc_content += f"Intégrer {school_str} représente pour moi une opportunité unique de lier mon appétence pour {student_interests} avec une formation d'excellence.\n\n"
+        doc_content += f"Je me tiens à votre disposition pour un entretien.\n\nCordialement,\n{student_name}"
 
     return {
         "status": "success",
