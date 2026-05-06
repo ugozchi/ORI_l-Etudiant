@@ -33,7 +33,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const { profile, isProfileComplete, completionPercentage } = useProfile();
+  const { profileData, isProfileComplete, completionPercentage } = useProfile();
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
@@ -127,7 +127,7 @@ Ton profil est actuellement rempli à **${completionPercentage}%**. Pour que je 
 
 **→ Compléter mon profil**
 **→ Ou me poser directement une question**`
-        : `Bonjour ${profile?.name?.split(' ')[0] || ''} ! 👋 Ton profil Persona est désormais généré et analysé !
+        : `Bonjour ${profileData?.name?.split(' ')[0] || ''} ! 👋 Ton profil Persona est désormais généré et analysé !
 
 Je vois que tu as un profil très intéressant, marqué par tes expériences. N'hésite pas à me demander de te faire un "sum up" de ton profil et de te suggérer des salons ou des métiers adaptés à tes excellents résultats !`;
       
@@ -139,7 +139,7 @@ Je vois que tu as un profil très intéressant, marqué par tes expériences. N'
       } as Message & { isWelcome?: boolean }];
     }
     return msgs;
-  }, [allMessages, currentThreadId, userId, isProfileComplete, profile?.name]);
+  }, [allMessages, currentThreadId, userId, isProfileComplete, profileData?.name]);
 
   const handleNewChat = () => {
     if (loading) return;
