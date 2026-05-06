@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useProfile } from '@/contexts/ProfileContext';
 import { LockedOverlay } from '@/components/layout/LockedOverlay';
+import { apiUrl } from '@/utils/api';
 
 export default function DocsPage() {
   const [docType, setDocType] = useState('cover_letter');
@@ -29,7 +30,7 @@ export default function DocsPage() {
       const { data: { session } } = await supabase.auth.getSession();
       const uid = session?.user?.id || 'demo-user';
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/docs/generate`, {
+      const res = await fetch(apiUrl('/api/docs/generate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

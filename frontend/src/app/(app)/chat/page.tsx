@@ -33,7 +33,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const { isProfileComplete, completionPercentage } = useProfile();
+  const { profile, isProfileComplete, completionPercentage } = useProfile();
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
@@ -139,7 +139,7 @@ Je vois que tu as un profil très intéressant, marqué par tes expériences. N'
       } as Message & { isWelcome?: boolean }];
     }
     return msgs;
-  }, [allMessages, currentThreadId, userId, isProfileComplete]);
+  }, [allMessages, currentThreadId, userId, isProfileComplete, profile?.name]);
 
   const handleNewChat = () => {
     if (loading) return;
